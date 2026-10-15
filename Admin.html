@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Payroll & Manual Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 font-sans min-h-screen p-6 text-slate-100 flex flex-col items-center">
+
+    <div class="max-w-5xl w-full">
+        <!-- Admin Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-slate-800 pb-4 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-white">🔒 Administrator Payroll Back End</h1>
+                <p class="text-sm text-slate-400">Pay period management, manual entries, edits, and class tracking</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Employee Filter Dropdown -->
+                <div>
+                    <label class="block text-[10px] uppercase font-semibold text-slate-400 mb-1">Filter Employee</label>
+                    <select id="employee-filter" onchange="renderDashboard()" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="ALL">All Employees</option>
+                        <option value="Matt Cody">Matt Cody</option>
+                        <option value="Zac Dunlap">Zac Dunlap</option>
+                        <option value="Jake Peterson">Jake Peterson</option>
+                    </select>
+                </div>
+
+                <!-- Pay Period Selector -->
+                <div>
+                    <label class="block text-[10px] uppercase font-semibold text-slate-400 mb-1">Select Pay Period</label>
+                    <select id="pay-period-select" onchange="renderDashboard()" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <!-- Populated by script starting Oct 5, 2026 -->
+                    </select>
+                </div>
+
+                <button onclick="openManualModal()" class="mt-4 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold text-xs transition shadow-lg shadow-emerald-900/20">+ Manual Entry</button>
+                <button onclick="clearHistory()" class="mt-4 px-3 py-2.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-800 rounded-xl font-semibold text-xs transition">Wipe Data</button>
+            </div>
+        </div>
+
+        <!-- Top Section: QuickBooks Class Summary Cards -->
+        <div class="mb-8">
+            <h2 id="summary-title" class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">QuickBooks Class Hours Breakdown (All Employees)</h2>
+            <div id="class-summary-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Injected class total cards -->
+            </div>
+        </div>
+
+        <!-- Main Section: Detailed Timesheet Logs -->
+        <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
+            <div class="p-4 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center text-sm">
+                <span id="log-count" class="font-semibold text-slate-300">Punches in view: 0</span>
+                <span class="text-xs text-slate-400">Manage, edit or create manual entries below</span>
+            </div>
+            <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                    <tr class="bg-slate-700/50 text-slate-400 uppercase tracking-wider text-xs border-b border-slate-700">
+                        <th class="p-4 font-semibold">Employee</th>
+                        <th class="p-4 font-semibold">QB Class (Location)</th>
+                        <th class="p-4 font-semibold">Punch Window</th>
+                        <th class="p-4 font-semibold text-right">Decimal Hours</th>
+                        <th class="p-4 font-semibold text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-table-body" class="divide-y divide-slate-700/50 text-slate-300">
+                    <!-- Logs loaded via script -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Manual Entry / Edit Modal -->
+    <div id="entry-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl text-slate-100">
+            <h3 id="modal-title" class="text-lg font-bold mb-4 text-white">Create Manual Timesheet Entry</h3>
+            
+            <input type="hidden" id="edit-entry-id">
+
+            <div class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-400 mb-1">Employee Name</label>
+                    <select id="modal-employee" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="Matt Cody">Matt Cody</option>
+                        <option value="Zac Dunlap">Zac Dunlap</option>
+                        <option value="Jake Peterson">Jake Peterson</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-400 mb-1">QuickBooks Class (Location)</label>
+                    <select id="modal-class" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="Bryant">Bryant</option>
+                        <option value="Cabot">Cabot</option>
+                        <option value="Maumelle">Maumelle</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-400 mb-1">Clock In Date & Time</label>
+                    <input type="datetime-local" id="modal-clockin" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-400 mb-1">Clock Out Date & Time (Leave blank if active)</label>
+                    <input type="datetime-local" id="modal-clockout" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <div class="flex space-x-3 mt-6">
+                <button onclick="closeModal()" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold text-slate-300">Cancel</button>
+                <button onclick="saveModalEntry()" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-white">Save Entry</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ANCHOR_START = new Date(2026, 9, 5); // October 5, 2026
+        const PERIOD_DAYS = 14;
+
+        function generatePayPeriods() {
+            const select = document.getElementById('pay-period-select');
+            select.innerHTML = "";
+            
+            let periodStart = new Date(ANCHOR_START.getTime());
+            
+            for (let i = 0; i < 15; i++) {
+                let periodEnd = new Date(periodStart.getTime());
+                periodEnd.setDate(periodStart.getDate() + PERIOD_DAYS - 1);
+
+                const startStr = periodStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const endStr = periodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                const optionValue = `${periodStart.toISOString()}_${periodEnd.toISOString()}`;
+                const option = document.createElement('option');
+                option.value = optionValue;
+                option.text = `${startStr} - ${endStr}`;
+                
+                select.appendChild(option);
+                periodStart.setDate(periodStart.getDate() + PERIOD_DAYS);
+            }
+        }
+
+        function renderDashboard() {
+            const timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
+            const selectedVal = document.getElementById('pay-period-select').value;
+            const selectedEmployee = document.getElementById('employee-filter').value;
+            
+            if (!selectedVal) return;
+            const [startIso, endIso] = selectedVal.split('_');
+            const periodStart = new Date(startIso);
+            const periodEnd = new Date(endIso);
+            periodEnd.setHours(23, 59, 59, 999);
+
+            let filteredLogs = timeLog.filter(entry => {
+                const entryDate = new Date(entry.clockIn);
+                return entryDate >= periodStart && entryDate <= periodEnd;
+            });
+
+            if (selectedEmployee !== "ALL") {
+                filteredLogs = filteredLogs.filter(entry => entry.name === selectedEmployee);
+                document.getElementById('summary-title').innerText = `QuickBooks Class Hours Breakdown (${selectedEmployee})`;
+            } else {
+                document.getElementById('summary-title').innerText = `QuickBooks Class Hours Breakdown (All Employees)`;
+            }
+
+            document.getElementById('log-count').innerText = `Punches in view: ${filteredLogs.length}`;
+
+            const classTotals = {};
+            filteredLogs.forEach(entry => {
+                const cls = entry.qbClass || "Unassigned";
+                classTotals[cls] = (classTotals[cls] || 0) + (entry.hoursDecimal || 0);
+            });
+
+            const summaryGrid = document.getElementById('class-summary-grid');
+            const classesList = Object.keys(classTotals);
+            
+            if (classesList.length === 0) {
+                summaryGrid.innerHTML = `<div class="col-span-3 p-4 bg-slate-800 border border-slate-700 rounded-xl text-center text-slate-500 text-xs">No hours recorded for this selection.</div>`;
+            } else {
+                summaryGrid.innerHTML = classesList.map(cls => `
+                    <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-md">
+                        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">QB Class: ${cls}</div>
+                        <div class="text-2xl font-extrabold text-indigo-400 mt-1">${classTotals[cls].toFixed(2)} <span class="text-xs font-medium text-slate-400">hrs</span></div>
+                    </div>
+                `).join('');
+            }
+
+            const tbody = document.getElementById('admin-table-body');
+            if (filteredLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-500">No time entries found matching this filter.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filteredLogs.map(entry => {
+                const inTime = new Date(entry.clockIn).toLocaleString();
+                const outTime = entry.clockOut ? new Date(entry.clockOut).toLocaleString() : '<span class="text-amber-400 animate-pulse">Active (Still Clocked In)</span>';
+                
+                return `
+                    <tr class="hover:bg-slate-700/30 transition">
+                        <td class="p-4 font-medium text-white">${entry.name}</td>
+                        <td class="p-4 text-slate-400">
+                            🏷️ Class: <span class="font-semibold text-indigo-400">${entry.qbClass}</span>
+                        </td>
+                        <td class="p-4 text-xs">
+                            <div class="text-slate-300">In: ${inTime}</div>
+                            <div class="text-slate-400 mt-0.5">Out: ${outTime}</div>
+                            ${entry.override ? `<div class="mt-1 text-amber-400">⚠️ Override by ${entry.manager}</div>` : ''}
+                        </td>
+                        <td class="p-4 text-right font-mono font-bold text-emerald-400">
+                            ${entry.hoursDecimal > 0 ? `${entry.hoursDecimal} hrs` : '-'}
+                        </td>
+                        <td class="p-4 text-center space-x-2">
+                            <button onclick="editEntry(${entry.id})" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold text-indigo-300 transition">Edit</button>
+                            <button onclick="deleteEntry(${entry.id})" class="px-2.5 py-1 bg-rose-600/20 hover:bg-rose-600/30 rounded-lg text-xs font-semibold text-rose-400 transition">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openManualModal() {
+            document.getElementById('modal-title').innerText = "Create Manual Timesheet Entry";
+            document.getElementById('edit-entry-id').value = "";
+            document.getElementById('modal-employee').value = "Matt Cody";
+            document.getElementById('modal-class').value = "Bryant";
+            
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('modal-clockin').value = now.toISOString().slice(0, 16);
+            document.getElementById('modal-clockout').value = "";
+
+            document.getElementById('entry-modal').classList.remove('hidden');
+        }
+
+        function editEntry(id) {
+            const timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
+            const entry = timeLog.find(e => e.id === id);
+            if (!entry) return;
+
+            document.getElementById('modal-title').innerText = "Edit Timesheet Entry";
+            document.getElementById('edit-entry-id').value = entry.id;
+            document.getElementById('modal-employee').value = entry.name;
+            document.getElementById('modal-class').value = entry.qbClass;
+
+            if (entry.clockIn) {
+                const dIn = new Date(entry.clockIn);
+                dIn.setMinutes(dIn.getMinutes() - dIn.getTimezoneOffset());
+                document.getElementById('modal-clockin').value = dIn.toISOString().slice(0, 16);
+            }
+            if (entry.clockOut) {
+                const dOut = new Date(entry.clockOut);
+                dOut.setMinutes(dOut.getMinutes() - dOut.getTimezoneOffset());
+                document.getElementById('modal-clockout').value = dOut.toISOString().slice(0, 16);
+            } else {
+                document.getElementById('modal-clockout').value = "";
+            }
+
+            document.getElementById('entry-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('entry-modal').classList.add('hidden');
+        }
+
+        function saveModalEntry() {
+            const editId = document.getElementById('edit-entry-id').value;
+            const empName = document.getElementById('modal-employee').value;
+            const qbClass = document.getElementById('modal-class').value;
+            const clockInVal = document.getElementById('modal-clockin').value;
+            const clockOutVal = document.getElementById('modal-clockout').value;
+
+            if (!clockInVal) {
+                alert("Clock In time is required.");
+                return;
+            }
+
+            const clockInIso = new Date(clockInVal).toISOString();
+            let clockOutIso = null;
+            let hoursDecimal = 0;
+
+            if (clockOutVal) {
+                clockOutIso = new Date(clockOutVal).toISOString();
+                const diffMs = new Date(clockOutIso) - new Date(clockInIso);
+                if (diffMs < 0) {
+                    alert("Clock Out time cannot be earlier than Clock In time!");
+                    return;
+                }
+                hoursDecimal = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+            }
+
+            let timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
+
+            if (editId) {
+                let entry = timeLog.find(e => e.id == editId);
+                if (entry) {
+                    entry.name = empName;
+                    entry.qbClass = qbClass;
+                    entry.clockIn = clockInIso;
+                    entry.clockOut = clockOutIso;
+                    entry.hoursDecimal = hoursDecimal;
+                }
+            } else {
+                const newEntry = {
+                    id: Date.now(),
+                    name: empName,
+                    qbClass: qbClass,
+                    clockIn: clockInIso,
+                    clockOut: clockOutIso,
+                    hoursDecimal: hoursDecimal,
+                    override: false,
+                    manager: "Manual Admin Entry"
+                };
+                timeLog.unshift(newEntry);
+            }
+
+            localStorage.setItem('timeClockLog', JSON.stringify(timeLog));
+            closeModal();
+            renderDashboard();
+        }
+
+        function deleteEntry(id) {
+            if (confirm("Are you sure you want to delete this time entry?")) {
+                let timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
+                timeLog = timeLog.filter(e => e.id !== id);
+                localStorage.setItem('timeClockLog', JSON.stringify(timeLog));
+                renderDashboard();
+            }
+        }
+
+        function clearHistory() {
+            if (confirm("Are you sure you want to wipe all stored timesheet records?")) {
+                localStorage.removeItem('timeClockLog');
+                renderDashboard();
+            }
+        }
+
+        generatePayPeriods();
+        renderDashboard();
+    </script>
+</body>
+</html>
