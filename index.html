@@ -56,7 +56,6 @@
         <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center">
             <h3 class="text-lg font-bold text-slate-800 mb-2">Manager Override Required</h3>
             <p class="text-sm text-slate-600 mb-4">Outside approved shift window for today. Have manager enter PIN.</p>
-            <!-- Standard native input type allows natural keyboard typing without global listener interference -->
             <input type="password" id="manager-pin-input" maxlength="4" autocomplete="new-password" placeholder="Manager PIN" class="w-full text-center text-2xl tracking-widest py-2 bg-slate-50 border border-slate-300 rounded-xl mb-4 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <div class="flex space-x-2">
                 <button onclick="closeOverrideModal()" class="flex-1 py-2 bg-slate-200 rounded-xl font-semibold text-sm">Cancel</button>
@@ -103,8 +102,9 @@
             renderTeamStatus();
         }
 
-        function renderTeamStatus() {
-            const timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
+        async function renderTeamStatus() {
+            const res = await fetch('/api/punches');
+            const timeLog = await res.json();
             const employees = users.filter(u => u.role === "employee" && u.name).sort((a, b) => a.name.localeCompare(b.name));
             
             document.getElementById('team-status-list').innerHTML = employees.map(emp => {
@@ -136,7 +136,6 @@
             const overrideModalOpen = !document.getElementById('override-modal').classList.contains('hidden');
             const setupModalOpen = !document.getElementById('setup-modal').classList.contains('hidden');
 
-            // Let modals handle native typing completely without global listener interference
             if (overrideModalOpen || setupModalOpen) {
                 if (e.key === 'Enter') {
                     if (overrideModalOpen) confirmOverride();
@@ -207,26 +206,38 @@
         }
 
         function closeOverrideModal() { document.getElementById('override-modal').classList.add('hidden'); pendingUser = null; document.getElementById('manager-pin-input').value = ""; }
-        function confirmOverride() {
+        
+        async function confirmOverride() {
             const mPin = document.getElementById('manager-pin-input').value;
             const manager = users.find(u => u.pin === mPin && u.role === "manager");
             if (!manager) { alert("Invalid Manager PIN!"); return; }
-            handlePunchFlow(pendingUser, document.getElementById('qb-class-select').value, true, manager.name);
+            await handlePunchFlow(pendingUser, document.getElementById('qb-class-select').value, true, manager.name);
             closeOverrideModal();
         }
 
-        function handlePunchFlow(user, qbClass, overrideStatus, managerName = "") {
-            let timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
+        async function handlePunchFlow(user, qbClass, overrideStatus, managerName = "") {
+            const res = await fetch('/api/punches');
+            let timeLog = await res.json();
             let active = timeLog.find(e => e.name === user.name && !e.clockOut);
+
             if (active) {
                 active.clockOut = new Date().toISOString();
                 active.hoursDecimal = parseFloat(((new Date(active.clockOut) - new Date(active.clockIn)) / (1000 * 60 * 60)).toFixed(2));
-                localStorage.setItem('timeClockLog', JSON.stringify(timeLog));
+                
+                await fetch('/api/punches/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(active)
+                });
                 showSuccess(user.name, qbClass, active.clockOut, false);
             } else {
                 const newEntry = { id: Date.now(), name: user.name, qbClass, clockIn: new Date().toISOString(), clockOut: null, hoursDecimal: 0, override: overrideStatus, manager: managerName };
-                timeLog.unshift(newEntry);
-                localStorage.setItem('timeClockLog', JSON.stringify(timeLog));
+                
+                await fetch('/api/punches/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newEntry)
+                });
                 showSuccess(user.name, qbClass, newEntry.clockIn, true);
             }
             renderTeamStatus();

@@ -17,6 +17,8 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
         console.error('Error opening database', err.message);
     } else {
         console.log('Connected to the SQLite database.');
+        
+        // Employees Table
         db.run(`CREATE TABLE IF NOT EXISTS employees (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             pin TEXT UNIQUE,
@@ -32,7 +34,6 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
             satStart TEXT DEFAULT '08:00', satEnd TEXT DEFAULT '17:00',
             sunStart TEXT DEFAULT '08:00', sunEnd TEXT DEFAULT '17:00'
         )`, () => {
-            // Check if payRate column exists for existing databases, add if missing
             db.run(`ALTER TABLE employees ADD COLUMN payRate REAL DEFAULT 20.00`, () => {});
 
             db.get(`SELECT COUNT(*) as count FROM employees`, (err, row) => {
@@ -57,13 +58,26 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
                     const stmt = db.prepare(`INSERT INTO employees (pin, name, role, needsPinSetup, payRate) VALUES (?, ?, ?, ?, ?)`);
                     defaultUsers.forEach(u => stmt.run(u));
                     stmt.finalize();
-                    console.log('Seeded employees with pay rates and weekly schedules.');
+                    console.log('Seeded employees.');
                 }
             });
         });
+
+        // Punches Table (Global Database Sync Across Computers)
+        db.run(`CREATE TABLE IF NOT EXISTS punches (
+            id INTEGER PRIMARY KEY,
+            name TEXT,
+            qbClass TEXT,
+            clockIn TEXT,
+            clockOut TEXT,
+            hoursDecimal REAL,
+            override INTEGER,
+            manager TEXT
+        )`, () => {});
     }
 });
 
+// Employee API Endpoints
 app.get('/api/employees', (req, res) => {
     db.all(`SELECT * FROM employees`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -121,6 +135,48 @@ app.post('/api/employees/delete', requireAuth, (req, res) => {
     });
 });
 
+// Time Punch API Endpoints (Database-backed for multi-computer sync)
+app.get('/api/punches', (req, res) => {
+    db.all(`SELECT * FROM punches ORDER BY clockIn DESC`, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.post('/api/punches/save', (req, res) => {
+    const { id, name, qbClass, clockIn, clockOut, hoursDecimal, override, manager } = req.body;
+    db.get(`SELECT * FROM punches WHERE id = ?`, [id], (err, row) => {
+        if (row) {
+            db.run(`UPDATE punches SET clockOut = ?, hoursDecimal = ? WHERE id = ?`,
+                [clockOut, hoursDecimal, id], function(err) {
+                    if (err) return res.status(400).json({ error: err.message });
+                    res.json({ success: true });
+                });
+        } else {
+            db.run(`INSERT INTO punches (id, name, qbClass, clockIn, clockOut, hoursDecimal, override, manager) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                [id, name, qbClass, clockIn, clockOut, hoursDecimal, override ? 1 : 0, manager], function(err) {
+                    if (err) return res.status(400).json({ error: err.message });
+                    res.json({ success: true });
+                });
+        }
+    });
+});
+
+app.post('/api/punches/delete', requireAuth, (req, res) => {
+    const { id } = req.body;
+    db.run(`DELETE FROM punches WHERE id = ?`, [id], function(err) {
+        if (err) return res.status(400).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+app.post('/api/punches/wipe', requireAuth, (req, res) => {
+    db.run(`DELETE FROM punches`, [], function(err) {
+        if (err) return res.status(400).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
 function requireAuth(req, res, next) {
     if (req.session && req.session.isAdmin) return next();
     res.redirect('/login.html');
@@ -129,7 +185,7 @@ function requireAuth(req, res, next) {
 app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.post('/login', (req, res) => {
     const { password } = req.body;
-    if (password === 'A11aboutresults!26') {
+    if (password === 'A11aboutresults!26') { // Change to your password
         req.session.isAdmin = true;
         res.redirect('/admin.html');
     } else {

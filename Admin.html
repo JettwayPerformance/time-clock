@@ -264,7 +264,10 @@
         async function renderDashboard() {
             generatePayPeriods();
             await fetchEmployees();
-            const timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
+            
+            const punchRes = await fetch('/api/punches');
+            const timeLog = await punchRes.json();
+
             const selectedVal = document.getElementById('pay-period-select').value;
             const selectedEmployee = document.getElementById('employee-filter').value;
             if (!selectedVal) return;
@@ -279,7 +282,6 @@
             
             const classTotals = {};
             const classPayTotals = {};
-            let totalPayroll = 0;
 
             filteredLogs.forEach(e => {
                 const empObj = employeesCache.find(u => u.name === e.name);
@@ -290,7 +292,6 @@
                 const cls = e.qbClass || "Unassigned";
                 classTotals[cls] = (classTotals[cls] || 0) + hrs;
                 classPayTotals[cls] = (classPayTotals[cls] || 0) + pay;
-                totalPayroll += pay;
             });
 
             const summaryGrid = document.getElementById('class-summary-grid');
@@ -338,8 +339,9 @@
             document.getElementById('entry-modal').classList.remove('hidden');
         }
 
-        function editEntry(id) {
-            const timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
+        async function editEntry(id) {
+            const punchRes = await fetch('/api/punches');
+            const timeLog = await punchRes.json();
             const entry = timeLog.find(e => e.id == id);
             if (!entry) return;
 
@@ -365,7 +367,7 @@
 
         function closeModal() { document.getElementById('entry-modal').classList.add('hidden'); }
 
-        function saveModalEntry() {
+        async function saveModalEntry() {
             const editId = document.getElementById('edit-entry-id').value;
             const empName = document.getElementById('modal-employee').value;
             const qbClass = document.getElementById('modal-class').value;
@@ -377,28 +379,44 @@
             let clockOutIso = clockOutVal ? new Date(clockOutVal).toISOString() : null;
             let hoursDecimal = clockOutIso ? parseFloat(((new Date(clockOutIso) - new Date(clockInIso)) / (1000 * 60 * 60)).toFixed(2)) : 0;
             
-            let timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
-            if (editId) {
-                let entry = timeLog.find(e => e.id == editId);
-                if (entry) { entry.name = empName; entry.qbClass = qbClass; entry.clockIn = clockInIso; entry.clockOut = clockOutIso; entry.hoursDecimal = hoursDecimal; }
-            } else {
-                timeLog.unshift({ id: Date.now(), name: empName, qbClass, clockIn: clockInIso, clockOut: clockOutIso, hoursDecimal, override: false, manager: "Manual Admin Entry" });
-            }
-            localStorage.setItem('timeClockLog', JSON.stringify(timeLog));
+            const entryPayload = {
+                id: editId ? parseInt(editId) : Date.now(),
+                name: empName,
+                qbClass,
+                clockIn: clockInIso,
+                clockOut: clockOutIso,
+                hoursDecimal,
+                override: false,
+                manager: "Manual Admin Entry"
+            };
+
+            await fetch('/api/punches/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(entryPayload)
+            });
+
             closeModal();
             renderDashboard();
         }
 
-        function deleteEntry(id) {
+        async function deleteEntry(id) {
             if (confirm("Delete entry?")) {
-                let timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
-                timeLog = timeLog.filter(e => e.id !== id);
-                localStorage.setItem('timeClockLog', JSON.stringify(timeLog));
+                await fetch('/api/punches/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
                 renderDashboard();
             }
         }
 
-        function clearHistory() { if (confirm("Wipe data?")) { localStorage.removeItem('timeClockLog'); renderDashboard(); } }
+        async function clearHistory() { 
+            if (confirm("Wipe all punch data?")) { 
+                await fetch('/api/punches/wipe', { method: 'POST' });
+                renderDashboard(); 
+            } 
+        }
 
         renderDashboard();
     </script>
