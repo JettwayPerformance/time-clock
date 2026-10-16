@@ -22,9 +22,6 @@
                     <label class="block text-[10px] uppercase font-semibold text-slate-400 mb-1">Filter Employee</label>
                     <select id="employee-filter" onchange="renderDashboard()" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <option value="ALL">All Employees</option>
-                        <option value="Matt Cody">Matt Cody</option>
-                        <option value="Zac Dunlap">Zac Dunlap</option>
-                        <option value="Jake Peterson">Jake Peterson</option>
                     </select>
                 </div>
 
@@ -83,9 +80,7 @@
                 <div>
                     <label class="block font-semibold text-slate-400 mb-1">Employee Name</label>
                     <select id="modal-employee" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="Matt Cody">Matt Cody</option>
-                        <option value="Zac Dunlap">Zac Dunlap</option>
-                        <option value="Jake Peterson">Jake Peterson</option>
+                        <!-- Populated dynamically -->
                     </select>
                 </div>
 
@@ -119,6 +114,38 @@
     <script>
         const ANCHOR_START = new Date(2026, 9, 5); // October 5, 2026
         const PERIOD_DAYS = 14;
+        // Default known employees, plus any new ones that punch in will be dynamically added
+        const DEFAULT_EMPLOYEES = ["Matt Cody", "Zac Dunlap", "Jake Peterson"];
+
+        function getUniqueEmployees() {
+            const timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
+            const employeesSet = new Set(DEFAULT_EMPLOYEES);
+            timeLog.forEach(entry => {
+                if (entry.name) employeesSet.add(entry.name);
+            });
+            return Array.from(employeesSet).sort();
+        }
+
+        function updateEmployeeDropdowns() {
+            const employees = getUniqueEmployees();
+            
+            // Update Filter Dropdown
+            const filterSelect = document.getElementById('employee-filter');
+            const currentFilterVal = filterSelect.value;
+            filterSelect.innerHTML = `<option value="ALL">All Employees</option>` + 
+                employees.map(emp => `<option value="${emp}">${emp}</option>`).join('');
+            if (Array.from(filterSelect.options).some(o => o.value === currentFilterVal)) {
+                filterSelect.value = currentFilterVal;
+            }
+
+            // Update Modal Dropdown
+            const modalSelect = document.getElementById('modal-employee');
+            const currentModalVal = modalSelect.value;
+            modalSelect.innerHTML = employees.map(emp => `<option value="${emp}">${emp}</option>`).join('');
+            if (Array.from(modalSelect.options).some(o => o.value === currentModalVal)) {
+                modalSelect.value = currentModalVal;
+            }
+        }
 
         function generatePayPeriods() {
             const select = document.getElementById('pay-period-select');
@@ -144,6 +171,8 @@
         }
 
         function renderDashboard() {
+            updateEmployeeDropdowns();
+
             const timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
             const selectedVal = document.getElementById('pay-period-select').value;
             const selectedEmployee = document.getElementById('employee-filter').value;
@@ -224,7 +253,9 @@
         function openManualModal() {
             document.getElementById('modal-title').innerText = "Create Manual Timesheet Entry";
             document.getElementById('edit-entry-id').value = "";
-            document.getElementById('modal-employee').value = "Matt Cody";
+            
+            const employees = getUniqueEmployees();
+            document.getElementById('modal-employee').value = employees[0] || "";
             document.getElementById('modal-class').value = "Bryant";
             
             const now = new Date();
