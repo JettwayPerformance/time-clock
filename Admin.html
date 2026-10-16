@@ -108,7 +108,7 @@
         </div>
     </div>
 
-    <!-- Manual Entry Modal -->
+    <!-- Manual Entry / Edit Modal -->
     <div id="entry-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl text-slate-100">
             <h3 id="modal-title" class="text-lg font-bold mb-4 text-white">Create Manual Timesheet Entry</h3>
@@ -259,14 +259,90 @@
                 classesList.map(cls => `<div class="bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-md"><div class="text-xs font-semibold text-slate-400 uppercase">QB Class: ${cls}</div><div class="text-2xl font-extrabold text-indigo-400 mt-1">${classTotals[cls].toFixed(2)} hrs</div></div>`).join('');
 
             document.getElementById('admin-table-body').innerHTML = filteredLogs.length === 0 ? `<tr><td colspan="5" class="p-8 text-center text-slate-500">No time entries found.</td></tr>` :
-                filteredLogs.map(e => `<tr class="hover:bg-slate-700/30"><td class="p-4 font-medium text-white">${e.name}</td><td class="p-4 text-slate-400">🏷️ ${e.qbClass}</td><td class="p-4 text-xs">In: ${new Date(e.clockIn).toLocaleString()}<br>Out: ${e.clockOut ? new Date(e.clockOut).toLocaleString() : 'Active'}</td><td class="p-4 text-right font-mono font-bold text-emerald-400">${e.hoursDecimal || '-'} hrs</td><td class="p-4 text-center">
-    <button onclick="editEntry(${e.id})" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold text-indigo-300 mr-1">Edit</button>
-    <button onclick="deleteEntry(${e.id})" class="px-2.5 py-1 bg-rose-600/20 hover:bg-rose-600/30 rounded-lg text-xs font-semibold text-rose-400">Delete</button>
-</td>-xs">Delete</button></td></tr>`).join('');
+                filteredLogs.map(e => `
+                    <tr class="hover:bg-slate-700/30">
+                        <td class="p-4 font-medium text-white">${e.name}</td>
+                        <td class="p-4 text-slate-400">🏷️ ${e.qbClass}</td>
+                        <td class="p-4 text-xs">In: ${new Date(e.clockIn).toLocaleString()}<br>Out: ${e.clockOut ? new Date(e.clockOut).toLocaleString() : 'Active'}</td>
+                        <td class="p-4 text-right font-mono font-bold text-emerald-400">${e.hoursDecimal || '-'} hrs</td>
+                        <td class="p-4 text-center space-x-2">
+                            <button onclick="editEntry(${e.id})" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold text-indigo-300">Edit</button>
+                            <button onclick="deleteEntry(${e.id})" class="px-2.5 py-1 bg-rose-600/20 hover:bg-rose-600/30 rounded-lg text-xs font-semibold text-rose-400">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
         }
 
-        function openManualModal() { document.getElementById('entry-modal').classList.remove('hidden'); }
+        function openManualModal() {
+            document.getElementById('modal-title').innerText = "Create Manual Timesheet Entry";
+            document.getElementById('edit-entry-id').value = "";
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('modal-clockin').value = now.toISOString().slice(0, 16);
+            document.getElementById('modal-clockout').value = "";
+            document.getElementById('entry-modal').classList.remove('hidden');
+        }
+
+        function editEntry(id) {
+            const timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
+            const entry = timeLog.find(e => e.id == id);
+            if (!entry) return;
+
+            document.getElementById('modal-title').innerText = "Edit Timesheet Entry";
+            document.getElementById('edit-entry-id').value = entry.id;
+            document.getElementById('modal-employee').value = entry.name;
+            document.getElementById('modal-class').value = entry.qbClass || "Bryant";
+            
+            if (entry.clockIn) {
+                const inDate = new Date(entry.clockIn);
+                inDate.setMinutes(inDate.getMinutes() - inDate.getTimezoneOffset());
+                document.getElementById('modal-clockin').value = inDate.toISOString().slice(0, 16);
+            }
+            if (entry.clockOut) {
+                const outDate = new Date(entry.clockOut);
+                outDate.setMinutes(outDate.getMinutes() - outDate.getTimezoneOffset());
+                document.getElementById('modal-clockout').value = outDate.toISOString().slice(0, 16);
+            } else {
+                document.getElementById('modal-clockout').value = "";
+            }
+            document.getElementById('entry-modal').classList.remove('hidden');
+        }
+
         function closeModal() { document.getElementById('entry-modal').classList.add('hidden'); }
+
+        function saveModalEntry() {
+            const editId = document.getElementById('edit-entry-id').value;
+            const empName = document.getElementById('modal-employee').value;
+            const qbClass = document.getElementById('modal-class').value;
+            const clockInVal = document.getElementById('modal-clockin').value;
+            const clockOutVal = document.getElementById('modal-clockout').value;
+            if (!clockInVal) { alert("Clock In required."); return; }
+            
+            const clockInIso = new Date(clockInVal).toISOString();
+            let clockOutIso = clockOutVal ? new Date(clockOutVal).toISOString() : null;
+            let hoursDecimal = clockOutIso ? parseFloat(((new Date(clockOutIso) - new Date(clockInIso)) / (1000 * 60 * 60)).toFixed(2)) : 0;
+            
+            let timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
+            if (editId) {
+                let entry = timeLog.find(e => e.id == editId);
+                if (entry) { entry.name = empName; entry.qbClass = qbClass; entry.clockIn = clockInIso; entry.clockOut = clockOutIso; entry.hoursDecimal = hoursDecimal; }
+            } else {
+                timeLog.unshift({ id: Date.now(), name: empName, qbClass, clockIn: clockInIso, clockOut: clockOutIso, hoursDecimal, override: false, manager: "Manual Admin Entry" });
+            }
+            localStorage.setItem('timeClockLog', JSON.stringify(timeLog));
+            closeModal();
+            renderDashboard();
+        }
+
+        function deleteEntry(id) {
+            if (confirm("Delete entry?")) {
+                let timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
+                timeLog = timeLog.filter(e => e.id !== id);
+                localStorage.setItem('timeClockLog', JSON.stringify(timeLog));
+                renderDashboard();
+            }
+        }
+
         function clearHistory() { if (confirm("Wipe data?")) { localStorage.removeItem('timeClockLog'); renderDashboard(); } }
 
         generatePayPeriods();

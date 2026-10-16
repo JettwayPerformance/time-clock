@@ -93,7 +93,6 @@ app.post('/api/employees/update-pin', (req, res) => {
     });
 });
 
-// Update custom day schedules
 app.post('/api/employees/schedule', requireAuth, (req, res) => {
     const { id, monStart, monEnd, tueStart, tueEnd, wedStart, wedEnd, thuStart, thuEnd, friStart, friEnd, satStart, satEnd, sunStart, sunEnd } = req.body;
     db.run(`UPDATE employees SET monStart=?, monEnd=?, tueStart=?, tueEnd=?, wedStart=?, wedEnd=?, thuStart=?, thuEnd=?, friStart=?, friEnd=?, satStart=?, satEnd=?, sunStart=?, sunEnd=? WHERE id=?`,
@@ -119,7 +118,7 @@ function requireAuth(req, res, next) {
 app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.post('/login', (req, res) => {
     const { password } = req.body;
-    if (password === 'A11aboutresults!26') {
+    if (password === 'your_secure_password_here') {
         req.session.isAdmin = true;
         res.redirect('/admin.html');
     } else {
