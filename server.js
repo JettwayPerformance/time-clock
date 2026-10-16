@@ -60,7 +60,6 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
     }
 });
 
-// API Endpoints
 app.get('/api/employees', (req, res) => {
     db.all(`SELECT * FROM employees`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -118,7 +117,7 @@ function requireAuth(req, res, next) {
 app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.post('/login', (req, res) => {
     const { password } = req.body;
-    if (password === 'A11aboutresults!26') {
+    if (password === 'password1234') { // Change to your password if needed
         req.session.isAdmin = true;
         res.redirect('/admin.html');
     } else {
