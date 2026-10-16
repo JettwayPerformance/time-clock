@@ -118,7 +118,7 @@ function requireAuth(req, res, next) {
 app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.post('/login', (req, res) => {
     const { password } = req.body;
-    if (password === 'your_secure_password_here') {
+    if (password === 'A11aboutresults!26') {
         req.session.isAdmin = true;
         res.redirect('/admin.html');
     } else {
