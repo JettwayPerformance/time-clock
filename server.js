@@ -23,6 +23,7 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
             name TEXT,
             role TEXT,
             needsPinSetup INTEGER,
+            payRate REAL DEFAULT 20.00,
             monStart TEXT DEFAULT '08:00', monEnd TEXT DEFAULT '17:00',
             tueStart TEXT DEFAULT '08:00', tueEnd TEXT DEFAULT '17:00',
             wedStart TEXT DEFAULT '08:00', wedEnd TEXT DEFAULT '17:00',
@@ -31,29 +32,32 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
             satStart TEXT DEFAULT '08:00', satEnd TEXT DEFAULT '17:00',
             sunStart TEXT DEFAULT '08:00', sunEnd TEXT DEFAULT '17:00'
         )`, () => {
+            // Check if payRate column exists for existing databases, add if missing
+            db.run(`ALTER TABLE employees ADD COLUMN payRate REAL DEFAULT 20.00`, () => {});
+
             db.get(`SELECT COUNT(*) as count FROM employees`, (err, row) => {
                 if (row.count === 0) {
                     const defaultUsers = [
-                        ["1111", "Amber Thompson", "employee", 1],
-                        ["2222", "Brandon Hall", "employee", 1],
-                        ["3333", "Dylan Johnsey", "employee", 1],
-                        ["4444", "Ellie Dorey", "employee", 1],
-                        ["5555", "Hope Neel", "employee", 1],
-                        ["6666", "Jack Anderson", "employee", 1],
-                        ["7777", "Jack Campbell", "employee", 1],
-                        ["8888", "Jake Peterson", "employee", 1],
-                        ["3131", "Madyson Mazzola", "employee", 1],
-                        ["0000", "Michael Hickman", "employee", 1],
-                        ["1234", "Paige Johnsey", "employee", 1],
-                        ["2345", "William Robison", "employee", 1],
-                        ["3456", "Zach Jeffery", "employee", 1],
-                        ["4567", "Zach Smith", "employee", 1],
-                        ["9999", "Brandon Hall", "manager", 0]
+                        ["1111", "Amber Thompson", "employee", 1, 20.00],
+                        ["2222", "Brandon Hall", "employee", 1, 20.00],
+                        ["3333", "Dylan Johnsey", "employee", 1, 20.00],
+                        ["4444", "Ellie Dorey", "employee", 1, 20.00],
+                        ["5555", "Hope Neel", "employee", 1, 20.00],
+                        ["6666", "Jack Anderson", "employee", 1, 20.00],
+                        ["7777", "Jack Campbell", "employee", 1, 20.00],
+                        ["8888", "Jake Peterson", "employee", 1, 20.00],
+                        ["3131", "Madyson Mazzola", "employee", 1, 20.00],
+                        ["0000", "Michael Hickman", "employee", 1, 20.00],
+                        ["1234", "Paige Johnsey", "employee", 1, 20.00],
+                        ["2345", "William Robison", "employee", 1, 20.00],
+                        ["3456", "Zach Jeffery", "employee", 1, 20.00],
+                        ["4567", "Zach Smith", "employee", 1, 20.00],
+                        ["9999", "Brandon Hall", "manager", 0, 30.00]
                     ];
-                    const stmt = db.prepare(`INSERT INTO employees (pin, name, role, needsPinSetup) VALUES (?, ?, ?, ?)`);
+                    const stmt = db.prepare(`INSERT INTO employees (pin, name, role, needsPinSetup, payRate) VALUES (?, ?, ?, ?, ?)`);
                     defaultUsers.forEach(u => stmt.run(u));
                     stmt.finalize();
-                    console.log('Seeded employees with default weekly schedules.');
+                    console.log('Seeded employees with pay rates and weekly schedules.');
                 }
             });
         });
@@ -68,11 +72,19 @@ app.get('/api/employees', (req, res) => {
 });
 
 app.post('/api/employees/add', requireAuth, (req, res) => {
-    const { name, pin } = req.body;
-    db.run(`INSERT INTO employees (pin, name, role, needsPinSetup) VALUES (?, ?, 'employee', 1)`, 
-    [pin, name], function(err) {
+    const { name, pin, payRate } = req.body;
+    db.run(`INSERT INTO employees (pin, name, role, needsPinSetup, payRate) VALUES (?, ?, 'employee', 1, ?)`, 
+    [pin, name, payRate || 20.00], function(err) {
         if (err) return res.status(400).json({ error: "PIN already in use." });
         res.json({ success: true, id: this.lastID });
+    });
+});
+
+app.post('/api/employees/rate', requireAuth, (req, res) => {
+    const { id, payRate } = req.body;
+    db.run(`UPDATE employees SET payRate = ? WHERE id = ?`, [payRate, id], function(err) {
+        if (err) return res.status(400).json({ error: err.message });
+        res.json({ success: true });
     });
 });
 
@@ -117,7 +129,7 @@ function requireAuth(req, res, next) {
 app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.post('/login', (req, res) => {
     const { password } = req.body;
-    if (password === 'password1234') { // Change to your password if needed
+    if (password === 'A11aboutresults!26') {
         req.session.isAdmin = true;
         res.redirect('/admin.html');
     } else {
