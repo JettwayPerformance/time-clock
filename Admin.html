@@ -3,21 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Payroll & Manual Management</title>
+    <title>Admin Dashboard - Payroll & Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 font-sans min-h-screen p-6 text-slate-100 flex flex-col items-center">
 
     <div class="max-w-5xl w-full">
-        <!-- Admin Header -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-slate-800 pb-4 gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-white">🔒 Administrator Payroll Back End</h1>
-                <p class="text-sm text-slate-400">Pay period management, manual entries, edits, and class tracking</p>
+                <p class="text-sm text-slate-400">Pay period management, manual entries, edits, and weekly schedule controls</p>
             </div>
             
             <div class="flex flex-wrap items-center gap-3">
-                <!-- Employee Filter Dropdown -->
                 <div>
                     <label class="block text-[10px] uppercase font-semibold text-slate-400 mb-1">Filter Employee</label>
                     <select id="employee-filter" onchange="renderDashboard()" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -25,28 +23,22 @@
                     </select>
                 </div>
 
-                <!-- Pay Period Selector -->
                 <div>
                     <label class="block text-[10px] uppercase font-semibold text-slate-400 mb-1">Select Pay Period</label>
-                    <select id="pay-period-select" onchange="renderDashboard()" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <!-- Populated by script starting Oct 5, 2026 -->
-                    </select>
+                    <select id="pay-period-select" onchange="renderDashboard()" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
                 </div>
 
-                <button onclick="openManualModal()" class="mt-4 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold text-xs transition shadow-lg shadow-emerald-900/20">+ Manual Entry</button>
-                <button onclick="clearHistory()" class="mt-4 px-3 py-2.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-800 rounded-xl font-semibold text-xs transition">Wipe Data</button>
+                <button onclick="openManualModal()" class="mt-4 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold text-xs transition shadow-lg">+ Manual Entry</button>
+                <button onclick="openStaffModal()" class="mt-4 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-xs transition shadow-lg">👥 Manage Staff & Schedules</button>
+                <button onclick="clearHistory()" class="mt-4 px-3 py-2.5 bg-rose-600/25 hover:bg-rose-600/35 text-rose-400 border border-rose-800 rounded-xl font-semibold text-xs transition">Wipe Data</button>
             </div>
         </div>
 
-        <!-- Top Section: QuickBooks Class Summary Cards -->
         <div class="mb-8">
             <h2 id="summary-title" class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">QuickBooks Class Hours Breakdown (All Employees)</h2>
-            <div id="class-summary-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <!-- Injected class total cards -->
-            </div>
+            <div id="class-summary-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
         </div>
 
-        <!-- Main Section: Detailed Timesheet Logs -->
         <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
             <div class="p-4 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center text-sm">
                 <span id="log-count" class="font-semibold text-slate-300">Punches in view: 0</span>
@@ -62,314 +54,220 @@
                         <th class="p-4 font-semibold text-center">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="admin-table-body" class="divide-y divide-slate-700/50 text-slate-300">
-                    <!-- Logs loaded via script -->
-                </tbody>
+                <tbody id="admin-table-body" class="divide-y divide-slate-700/50 text-slate-300"></tbody>
             </table>
         </div>
     </div>
 
-    <!-- Manual Entry / Edit Modal -->
-    <div id="entry-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <!-- Staff Management Modal -->
+    <div id="staff-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-2xl w-full shadow-2xl text-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-white">Manage Employees, PINs & Schedules</h3>
+                <button onclick="closeStaffModal()" class="text-slate-400 hover:text-white text-sm font-bold">✕ Close</button>
+            </div>
+
+            <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700 mb-6 space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Add New Employee</h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" id="new-emp-name" placeholder="Full Name" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200">
+                    <input type="text" id="new-emp-pin" maxlength="4" placeholder="Temp 4-Digit PIN" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200">
+                </div>
+                <button onclick="addNewEmployee()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold text-xs text-white">Add Employee</button>
+            </div>
+
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Staff List & Schedule Management</h4>
+            <div class="border border-slate-700 rounded-xl divide-y divide-slate-700/50">
+                <table class="w-full text-left text-xs">
+                    <tbody id="staff-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Editor Modal -->
+    <div id="schedule-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl text-slate-100">
-            <h3 id="modal-title" class="text-lg font-bold mb-4 text-white">Create Manual Timesheet Entry</h3>
+            <h3 id="sched-modal-title" class="text-lg font-bold mb-4 text-white">Edit Schedule</h3>
+            <input type="hidden" id="sched-emp-id">
             
-            <input type="hidden" id="edit-entry-id">
-
-            <div class="space-y-4 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-400 mb-1">Employee Name</label>
-                    <select id="modal-employee" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <!-- Populated dynamically -->
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block font-semibold text-slate-400 mb-1">QuickBooks Class (Location)</label>
-                    <select id="modal-class" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="Bryant">Bryant</option>
-                        <option value="Cabot">Cabot</option>
-                        <option value="Maumelle">Maumelle</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block font-semibold text-slate-400 mb-1">Clock In Date & Time</label>
-                    <input type="datetime-local" id="modal-clockin" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-
-                <div>
-                    <label class="block font-semibold text-slate-400 mb-1">Clock Out Date & Time (Leave blank if active)</label>
-                    <input type="datetime-local" id="modal-clockout" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
+            <div class="space-y-2 text-xs max-h-72 overflow-y-auto pr-2">
+                <div class="grid grid-cols-3 gap-2 items-center"><span class="font-bold">Monday:</span><input type="time" id="monStart" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"><input type="time" id="monEnd" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"></div>
+                <div class="grid grid-cols-3 gap-2 items-center"><span class="font-bold">Tuesday:</span><input type="time" id="tueStart" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"><input type="time" id="tueEnd" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"></div>
+                <div class="grid grid-cols-3 gap-2 items-center"><span class="font-bold">Wednesday:</span><input type="time" id="wedStart" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"><input type="time" id="wedEnd" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"></div>
+                <div class="grid grid-cols-3 gap-2 items-center"><span class="font-bold">Thursday:</span><input type="time" id="thuStart" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"><input type="time" id="thuEnd" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"></div>
+                <div class="grid grid-cols-3 gap-2 items-center"><span class="font-bold">Friday:</span><input type="time" id="friStart" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"><input type="time" id="friEnd" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"></div>
+                <div class="grid grid-cols-3 gap-2 items-center"><span class="font-bold">Saturday:</span><input type="time" id="satStart" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"><input type="time" id="satEnd" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"></div>
+                <div class="grid grid-cols-3 gap-2 items-center"><span class="font-bold">Sunday:</span><input type="time" id="sunStart" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"><input type="time" id="sunEnd" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"></div>
             </div>
 
             <div class="flex space-x-3 mt-6">
-                <button onclick="closeModal()" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold text-slate-300">Cancel</button>
-                <button onclick="saveModalEntry()" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-white">Save Entry</button>
+                <button onclick="closeScheduleModal()" class="flex-1 py-2.5 bg-slate-700 rounded-xl font-semibold text-slate-300">Cancel</button>
+                <button onclick="saveSchedule()" class="flex-1 py-2.5 bg-indigo-600 rounded-xl font-semibold text-white">Save Schedule</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Entry Modal -->
+    <div id="entry-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl text-slate-100">
+            <h3 id="modal-title" class="text-lg font-bold mb-4 text-white">Create Manual Timesheet Entry</h3>
+            <input type="hidden" id="edit-entry-id">
+            <div class="space-y-4 text-xs">
+                <div><label class="block font-semibold text-slate-400 mb-1">Employee Name</label><select id="modal-employee" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200"></select></div>
+                <div><label class="block font-semibold text-slate-400 mb-1">QuickBooks Class</label><select id="modal-class" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200"><option value="Bryant">Bryant</option><option value="Cabot">Cabot</option><option value="Maumelle">Maumelle</option></select></div>
+                <div><label class="block font-semibold text-slate-400 mb-1">Clock In</label><input type="datetime-local" id="modal-clockin" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200"></div>
+                <div><label class="block font-semibold text-slate-400 mb-1">Clock Out</label><input type="datetime-local" id="modal-clockout" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200"></div>
+            </div>
+            <div class="flex space-x-3 mt-6">
+                <button onclick="closeModal()" class="flex-1 py-3 bg-slate-700 rounded-xl font-semibold">Cancel</button>
+                <button onclick="saveModalEntry()" class="flex-1 py-3 bg-indigo-600 rounded-xl font-semibold">Save Entry</button>
             </div>
         </div>
     </div>
 
     <script>
-        const ANCHOR_START = new Date(2026, 9, 5); // October 5, 2026
+        const ANCHOR_START = new Date(2026, 9, 5);
         const PERIOD_DAYS = 14;
-        // Default known employees, plus any new ones that punch in will be dynamically added
-        const DEFAULT_EMPLOYEES = ["Matt Cody", "Zac Dunlap", "Jake Peterson"];
+        let employeesCache = [];
 
-        function getUniqueEmployees() {
-            const timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
-            const employeesSet = new Set(DEFAULT_EMPLOYEES);
-            timeLog.forEach(entry => {
-                if (entry.name) employeesSet.add(entry.name);
-            });
-            return Array.from(employeesSet).sort();
+        async function fetchEmployees() {
+            const res = await fetch('/api/employees');
+            employeesCache = await res.json();
+            updateEmployeeDropdowns();
         }
 
         function updateEmployeeDropdowns() {
-            const employees = getUniqueEmployees();
-            
-            // Update Filter Dropdown
+            const activeEmps = employeesCache.filter(u => u.role === 'employee').map(u => u.name).sort();
             const filterSelect = document.getElementById('employee-filter');
-            const currentFilterVal = filterSelect.value;
-            filterSelect.innerHTML = `<option value="ALL">All Employees</option>` + 
-                employees.map(emp => `<option value="${emp}">${emp}</option>`).join('');
-            if (Array.from(filterSelect.options).some(o => o.value === currentFilterVal)) {
-                filterSelect.value = currentFilterVal;
-            }
+            const currentFilter = filterSelect.value;
+            filterSelect.innerHTML = `<option value="ALL">All Employees</option>` + activeEmps.map(emp => `<option value="${emp}">${emp}</option>`).join('');
+            if (activeEmps.includes(currentFilter) || currentFilter === "ALL") filterSelect.value = currentFilter;
+            document.getElementById('modal-employee').innerHTML = activeEmps.map(emp => `<option value="${emp}">${emp}</option>`).join('');
+        }
 
-            // Update Modal Dropdown
-            const modalSelect = document.getElementById('modal-employee');
-            const currentModalVal = modalSelect.value;
-            modalSelect.innerHTML = employees.map(emp => `<option value="${emp}">${emp}</option>`).join('');
-            if (Array.from(modalSelect.options).some(o => o.value === currentModalVal)) {
-                modalSelect.value = currentModalVal;
+        async function openStaffModal() {
+            await fetchEmployees();
+            document.getElementById('staff-table-body').innerHTML = employeesCache.map(emp => `
+                <tr class="border-b border-slate-700/50">
+                    <td class="p-3 font-medium text-white">${emp.name}</td>
+                    <td class="p-3 text-indigo-400 font-mono">PIN: ${emp.pin}</td>
+                    <td class="p-3 text-right space-x-1">
+                        <button onclick="openScheduleModal(${emp.id})" class="px-2 py-1 bg-indigo-600/30 text-indigo-300 rounded text-[10px] font-semibold">Schedule</button>
+                        <button onclick="resetPin(${emp.id})" class="px-2 py-1 bg-amber-600/20 text-amber-400 rounded text-[10px] font-semibold">Reset PIN</button>
+                        ${emp.role !== 'manager' ? `<button onclick="deleteEmployee(${emp.id})" class="px-2 py-1 bg-rose-600/20 text-rose-400 rounded text-[10px] font-semibold">Delete</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('staff-modal').classList.remove('hidden');
+        }
+
+        function closeStaffModal() { document.getElementById('staff-modal').classList.add('hidden'); renderDashboard(); }
+
+        function openScheduleModal(id) {
+            const emp = employeesCache.find(e => e.id === id);
+            if (!emp) return;
+            document.getElementById('sched-modal-title').innerText = `Edit Schedule: ${emp.name}`;
+            document.getElementById('sched-emp-id').value = emp.id;
+            
+            const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+            days.forEach(d => {
+                document.getElementById(`${d}Start`).value = emp[`${d}Start`] || '08:00';
+                document.getElementById(`${d}End`).value = emp[`${d}End`] || '17:00';
+            });
+            document.getElementById('schedule-modal').classList.remove('hidden');
+        }
+
+        function closeScheduleModal() { document.getElementById('schedule-modal').classList.add('hidden'); }
+
+        async function saveSchedule() {
+            const id = document.getElementById('sched-emp-id').value;
+            const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+            const payload = { id };
+            days.forEach(d => {
+                payload[`${d}Start`] = document.getElementById(`${d}Start`).value;
+                payload[`${d}End`] = document.getElementById(`${d}End`).value;
+            });
+
+            const res = await fetch('/api/employees/schedule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if ((await res.json()).success) {
+                alert("Schedule updated successfully!");
+                closeScheduleModal();
+                openStaffModal();
+            }
+        }
+
+        async function addNewEmployee() {
+            const name = document.getElementById('new-emp-name').value.trim();
+            const pin = document.getElementById('new-emp-pin').value.trim();
+            if (!name || pin.length !== 4) { alert("Enter valid name and 4-digit PIN."); return; }
+            const res = await fetch('/api/employees/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, pin }) });
+            if ((await res.json()).success) { document.getElementById('new-emp-name').value = ""; document.getElementById('new-emp-pin').value = ""; openStaffModal(); }
+            else { alert("PIN already in use."); }
+        }
+
+        async function resetPin(id) {
+            const newPin = prompt("Enter temporary 4-digit PIN:");
+            if (!newPin || newPin.length !== 4) return;
+            const res = await fetch('/api/employees/reset-pin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, newPin }) });
+            if ((await res.json()).success) { alert("PIN reset!"); openStaffModal(); }
+        }
+
+        async function deleteEmployee(id) {
+            if (confirm("Delete employee?")) {
+                await fetch('/api/employees/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+                openStaffModal();
             }
         }
 
         function generatePayPeriods() {
             const select = document.getElementById('pay-period-select');
             select.innerHTML = "";
-            
             let periodStart = new Date(ANCHOR_START.getTime());
-            
             for (let i = 0; i < 15; i++) {
                 let periodEnd = new Date(periodStart.getTime());
                 periodEnd.setDate(periodStart.getDate() + PERIOD_DAYS - 1);
-
-                const startStr = periodStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                const endStr = periodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                
-                const optionValue = `${periodStart.toISOString()}_${periodEnd.toISOString()}`;
-                const option = document.createElement('option');
-                option.value = optionValue;
-                option.text = `${startStr} - ${endStr}`;
-                
-                select.appendChild(option);
+                select.innerHTML += `<option value="${periodStart.toISOString()}_${periodEnd.toISOString()}">${periodStart.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})} - ${periodEnd.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})}</option>`;
                 periodStart.setDate(periodStart.getDate() + PERIOD_DAYS);
             }
         }
 
-        function renderDashboard() {
-            updateEmployeeDropdowns();
-
+        async function renderDashboard() {
+            await fetchEmployees();
             const timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
             const selectedVal = document.getElementById('pay-period-select').value;
             const selectedEmployee = document.getElementById('employee-filter').value;
-            
             if (!selectedVal) return;
             const [startIso, endIso] = selectedVal.split('_');
-            const periodStart = new Date(startIso);
-            const periodEnd = new Date(endIso);
+            const periodStart = new Date(startIso), periodEnd = new Date(endIso);
             periodEnd.setHours(23, 59, 59, 999);
 
-            let filteredLogs = timeLog.filter(entry => {
-                const entryDate = new Date(entry.clockIn);
-                return entryDate >= periodStart && entryDate <= periodEnd;
-            });
-
-            if (selectedEmployee !== "ALL") {
-                filteredLogs = filteredLogs.filter(entry => entry.name === selectedEmployee);
-                document.getElementById('summary-title').innerText = `QuickBooks Class Hours Breakdown (${selectedEmployee})`;
-            } else {
-                document.getElementById('summary-title').innerText = `QuickBooks Class Hours Breakdown (All Employees)`;
-            }
+            let filteredLogs = timeLog.filter(e => new Date(e.clockIn) >= periodStart && new Date(e.clockIn) <= periodEnd);
+            if (selectedEmployee !== "ALL") filteredLogs = filteredLogs.filter(e => e.name === selectedEmployee);
 
             document.getElementById('log-count').innerText = `Punches in view: ${filteredLogs.length}`;
-
             const classTotals = {};
-            filteredLogs.forEach(entry => {
-                const cls = entry.qbClass || "Unassigned";
-                classTotals[cls] = (classTotals[cls] || 0) + (entry.hoursDecimal || 0);
-            });
+            filteredLogs.forEach(e => classTotals[e.qbClass || "Unassigned"] = (classTotals[e.qbClass || "Unassigned"] || 0) + (e.hoursDecimal || 0));
 
             const summaryGrid = document.getElementById('class-summary-grid');
             const classesList = Object.keys(classTotals);
-            
-            if (classesList.length === 0) {
-                summaryGrid.innerHTML = `<div class="col-span-3 p-4 bg-slate-800 border border-slate-700 rounded-xl text-center text-slate-500 text-xs">No hours recorded for this selection.</div>`;
-            } else {
-                summaryGrid.innerHTML = classesList.map(cls => `
-                    <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-md">
-                        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">QB Class: ${cls}</div>
-                        <div class="text-2xl font-extrabold text-indigo-400 mt-1">${classTotals[cls].toFixed(2)} <span class="text-xs font-medium text-slate-400">hrs</span></div>
-                    </div>
-                `).join('');
-            }
+            summaryGrid.innerHTML = classesList.length === 0 ? `<div class="col-span-3 p-4 bg-slate-800 border border-slate-700 rounded-xl text-center text-slate-500 text-xs">No hours recorded.</div>` :
+                classesList.map(cls => `<div class="bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-md"><div class="text-xs font-semibold text-slate-400 uppercase">QB Class: ${cls}</div><div class="text-2xl font-extrabold text-indigo-400 mt-1">${classTotals[cls].toFixed(2)} hrs</div></div>`).join('');
 
-            const tbody = document.getElementById('admin-table-body');
-            if (filteredLogs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-500">No time entries found matching this filter.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = filteredLogs.map(entry => {
-                const inTime = new Date(entry.clockIn).toLocaleString();
-                const outTime = entry.clockOut ? new Date(entry.clockOut).toLocaleString() : '<span class="text-amber-400 animate-pulse">Active (Still Clocked In)</span>';
-                
-                return `
-                    <tr class="hover:bg-slate-700/30 transition">
-                        <td class="p-4 font-medium text-white">${entry.name}</td>
-                        <td class="p-4 text-slate-400">
-                            🏷️ Class: <span class="font-semibold text-indigo-400">${entry.qbClass}</span>
-                        </td>
-                        <td class="p-4 text-xs">
-                            <div class="text-slate-300">In: ${inTime}</div>
-                            <div class="text-slate-400 mt-0.5">Out: ${outTime}</div>
-                            ${entry.override ? `<div class="mt-1 text-amber-400">⚠️ Override by ${entry.manager}</div>` : ''}
-                        </td>
-                        <td class="p-4 text-right font-mono font-bold text-emerald-400">
-                            ${entry.hoursDecimal > 0 ? `${entry.hoursDecimal} hrs` : '-'}
-                        </td>
-                        <td class="p-4 text-center space-x-2">
-                            <button onclick="editEntry(${entry.id})" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold text-indigo-300 transition">Edit</button>
-                            <button onclick="deleteEntry(${entry.id})" class="px-2.5 py-1 bg-rose-600/20 hover:bg-rose-600/30 rounded-lg text-xs font-semibold text-rose-400 transition">Delete</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
+            document.getElementById('admin-table-body').innerHTML = filteredLogs.length === 0 ? `<tr><td colspan="5" class="p-8 text-center text-slate-500">No time entries found.</td></tr>` :
+                filteredLogs.map(e => `<tr class="hover:bg-slate-700/30"><td class="p-4 font-medium text-white">${e.name}</td><td class="p-4 text-slate-400">🏷️ ${e.qbClass}</td><td class="p-4 text-xs">In: ${new Date(e.clockIn).toLocaleString()}<br>Out: ${e.clockOut ? new Date(e.clockOut).toLocaleString() : 'Active'}</td><td class="p-4 text-right font-mono font-bold text-emerald-400">${e.hoursDecimal || '-'} hrs</td><td class="p-4 text-center"><button onclick="deleteEntry(${e.id})" class="px-2.5 py-1 bg-rose-600/2억 text-rose-400 rounded text-xs">Delete</button></td></tr>`).join('');
         }
 
-        function openManualModal() {
-            document.getElementById('modal-title').innerText = "Create Manual Timesheet Entry";
-            document.getElementById('edit-entry-id').value = "";
-            
-            const employees = getUniqueEmployees();
-            document.getElementById('modal-employee').value = employees[0] || "";
-            document.getElementById('modal-class').value = "Bryant";
-            
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('modal-clockin').value = now.toISOString().slice(0, 16);
-            document.getElementById('modal-clockout').value = "";
-
-            document.getElementById('entry-modal').classList.remove('hidden');
-        }
-
-        function editEntry(id) {
-            const timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
-            const entry = timeLog.find(e => e.id === id);
-            if (!entry) return;
-
-            document.getElementById('modal-title').innerText = "Edit Timesheet Entry";
-            document.getElementById('edit-entry-id').value = entry.id;
-            document.getElementById('modal-employee').value = entry.name;
-            document.getElementById('modal-class').value = entry.qbClass;
-
-            if (entry.clockIn) {
-                const dIn = new Date(entry.clockIn);
-                dIn.setMinutes(dIn.getMinutes() - dIn.getTimezoneOffset());
-                document.getElementById('modal-clockin').value = dIn.toISOString().slice(0, 16);
-            }
-            if (entry.clockOut) {
-                const dOut = new Date(entry.clockOut);
-                dOut.setMinutes(dOut.getMinutes() - dOut.getTimezoneOffset());
-                document.getElementById('modal-clockout').value = dOut.toISOString().slice(0, 16);
-            } else {
-                document.getElementById('modal-clockout').value = "";
-            }
-
-            document.getElementById('entry-modal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('entry-modal').classList.add('hidden');
-        }
-
-        function saveModalEntry() {
-            const editId = document.getElementById('edit-entry-id').value;
-            const empName = document.getElementById('modal-employee').value;
-            const qbClass = document.getElementById('modal-class').value;
-            const clockInVal = document.getElementById('modal-clockin').value;
-            const clockOutVal = document.getElementById('modal-clockout').value;
-
-            if (!clockInVal) {
-                alert("Clock In time is required.");
-                return;
-            }
-
-            const clockInIso = new Date(clockInVal).toISOString();
-            let clockOutIso = null;
-            let hoursDecimal = 0;
-
-            if (clockOutVal) {
-                clockOutIso = new Date(clockOutVal).toISOString();
-                const diffMs = new Date(clockOutIso) - new Date(clockInIso);
-                if (diffMs < 0) {
-                    alert("Clock Out time cannot be earlier than Clock In time!");
-                    return;
-                }
-                hoursDecimal = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
-            }
-
-            let timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
-
-            if (editId) {
-                let entry = timeLog.find(e => e.id == editId);
-                if (entry) {
-                    entry.name = empName;
-                    entry.qbClass = qbClass;
-                    entry.clockIn = clockInIso;
-                    entry.clockOut = clockOutIso;
-                    entry.hoursDecimal = hoursDecimal;
-                }
-            } else {
-                const newEntry = {
-                    id: Date.now(),
-                    name: empName,
-                    qbClass: qbClass,
-                    clockIn: clockInIso,
-                    clockOut: clockOutIso,
-                    hoursDecimal: hoursDecimal,
-                    override: false,
-                    manager: "Manual Admin Entry"
-                };
-                timeLog.unshift(newEntry);
-            }
-
-            localStorage.setItem('timeClockLog', JSON.stringify(timeLog));
-            closeModal();
-            renderDashboard();
-        }
-
-        function deleteEntry(id) {
-            if (confirm("Are you sure you want to delete this time entry?")) {
-                let timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
-                timeLog = timeLog.filter(e => e.id !== id);
-                localStorage.setItem('timeClockLog', JSON.stringify(timeLog));
-                renderDashboard();
-            }
-        }
-
-        function clearHistory() {
-            if (confirm("Are you sure you want to wipe all stored timesheet records?")) {
-                localStorage.removeItem('timeClockLog');
-                renderDashboard();
-            }
-        }
+        function openManualModal() { document.getElementById('entry-modal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('entry-modal').classList.add('hidden'); }
+        function clearHistory() { if (confirm("Wipe data?")) { localStorage.removeItem('timeClockLog'); renderDashboard(); } }
 
         generatePayPeriods();
-        renderDashboard();
+        fetchEmployees().then(() => renderDashboard());
     </script>
 </body>
 </html>

@@ -8,364 +8,202 @@
 </head>
 <body class="bg-slate-100 font-sans min-h-screen flex flex-col items-center justify-center p-4">
 
-    <!-- Outer Wrapper: Side-by-Side Layout on Desktop -->
     <div class="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        
-        <!-- Left Side: Terminal Box -->
         <div class="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
-            <!-- Header -->
             <div class="text-center mb-6">
                 <h1 class="text-2xl font-bold text-slate-800">Time Clock Terminal</h1>
-                <p id="terminal-subtitle" class="text-sm font-medium text-indigo-600 mt-1">Select Location & Enter PIN</p>
+                <p class="text-sm font-medium text-indigo-600 mt-1">Select Location & Enter PIN</p>
             </div>
 
-            <!-- QuickBooks Class (Labeled as "Location") Selector -->
             <div class="mb-6">
                 <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Location</label>
-                <select id="qb-class-select" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <select id="qb-class-select" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-700 font-medium focus:outline-none">
                     <option value="Bryant">Bryant</option>
                     <option value="Cabot">Cabot</option>
                     <option value="Maumelle">Maumelle</option>
                 </select>
             </div>
 
-            <!-- PIN Display Screen -->
             <div class="mb-6">
-                <input type="password" id="pin-display" readonly maxlength="4" placeholder="----" 
-                    class="w-full text-center text-3xl tracking-widest py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-700 font-mono focus:outline-none">
+                <input type="password" id="pin-display" readonly maxlength="4" placeholder="----" class="w-full text-center text-3xl tracking-widest py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-700 font-mono focus:outline-none">
             </div>
 
-            <!-- Number Pad -->
             <div class="grid grid-cols-3 gap-3">
-                <button onclick="pressNum('1')" class="py-4 bg-slate-100 hover:bg-slate-200 active:scale-95 transition rounded-xl text-xl font-bold text-slate-700">1</button>
-                <button onclick="pressNum('2')" class="py-4 bg-slate-100 hover:bg-slate-200 active:scale-95 transition rounded-xl text-xl font-bold text-slate-700">2</button>
-                <button onclick="pressNum('3')" class="py-4 bg-slate-100 hover:bg-slate-200 active:scale-95 transition rounded-xl text-xl font-bold text-slate-700">3</button>
-                <button onclick="pressNum('4')" class="py-4 bg-slate-100 hover:bg-slate-200 active:scale-95 transition rounded-xl text-xl font-bold text-slate-700">4</button>
-                <button onclick="pressNum('5')" class="py-4 bg-slate-100 hover:bg-slate-200 active:scale-95 transition rounded-xl text-xl font-bold text-slate-700">5</button>
-                <button onclick="pressNum('6')" class="py-4 bg-slate-100 hover:bg-slate-200 active:scale-95 transition rounded-xl text-xl font-bold text-slate-700">6</button>
-                <button onclick="pressNum('7')" class="py-4 bg-slate-100 hover:bg-slate-200 active:scale-95 transition rounded-xl text-xl font-bold text-slate-700">7</button>
-                <button onclick="pressNum('8')" class="py-4 bg-slate-100 hover:bg-slate-200 active:scale-95 transition rounded-xl text-xl font-bold text-slate-700">8</button>
-                <button onclick="pressNum('9')" class="py-4 bg-slate-100 hover:bg-slate-200 active:scale-95 transition rounded-xl text-xl font-bold text-slate-700">9</button>
-                <button onclick="clearPin()" class="py-4 bg-rose-50 hover:bg-rose-100 active:scale-95 transition rounded-xl text-sm font-bold text-rose-600">Clear</button>
-                <button onclick="pressNum('0')" class="py-4 bg-slate-100 hover:bg-slate-200 active:scale-95 transition rounded-xl text-xl font-bold text-slate-700">0</button>
-                <button onclick="submitPin()" class="py-4 bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition rounded-xl text-sm font-bold text-white shadow-lg shadow-indigo-200">Enter</button>
+                <button onclick="pressNum('1')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">1</button>
+                <button onclick="pressNum('2')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">2</button>
+                <button onclick="pressNum('3')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">3</button>
+                <button onclick="pressNum('4')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">4</button>
+                <button onclick="pressNum('5')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">5</button>
+                <button onclick="pressNum('6')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">6</button>
+                <button onclick="pressNum('7')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">7</button>
+                <button onclick="pressNum('8')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">8</button>
+                <button onclick="pressNum('9')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">9</button>
+                <button onclick="clearPin()" class="py-4 bg-rose-50 hover:bg-rose-100 rounded-xl text-sm font-bold text-rose-600">Clear</button>
+                <button onclick="pressNum('0')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">0</button>
+                <button onclick="submitPin()" class="py-4 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-sm font-bold text-white shadow-lg">Enter</button>
             </div>
         </div>
 
-        <!-- Right Side: Live Team Status Panel -->
         <div class="bg-white rounded-2xl shadow-xl p-8 border border-slate-200 max-h-[600px] overflow-y-auto">
             <h2 class="text-lg font-bold text-slate-800 mb-1">Live Team Status</h2>
             <p class="text-xs text-slate-500 mb-6">Real-time status of crew members</p>
-            
-            <div id="team-status-list" class="space-y-3">
-                <!-- Dynamically populated by script -->
-            </div>
+            <div id="team-status-list" class="space-y-3"></div>
         </div>
-
     </div>
 
     <!-- Manager Override Modal -->
     <div id="override-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
             <h3 class="text-lg font-bold text-slate-800 mb-2">Manager Override Required</h3>
-            <p class="text-sm text-slate-600 mb-4">Outside approved shift window. Have manager Brandon Hall enter his 4-digit PIN.</p>
-            <input type="password" id="manager-pin-input" maxlength="4" placeholder="Manager PIN" class="w-full text-center text-2xl tracking-widest py-2 bg-slate-50 border border-slate-300 rounded-xl mb-4 font-mono focus:outline-none">
+            <p class="text-sm text-slate-600 mb-4">Outside approved shift window for today. Have manager enter PIN.</p>
+            <input type="password" id="manager-pin-input" maxlength="4" placeholder="Manager PIN" class="w-full text-center text-2xl tracking-widest py-2 bg-slate-50 border border-slate-300 rounded-xl mb-4 font-mono">
             <div class="flex space-x-2">
-                <button onclick="closeOverrideModal()" class="flex-1 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl font-semibold text-slate-700 text-sm">Cancel</button>
-                <button onclick="confirmOverride()" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-semibold text-white text-sm">Authorize</button>
+                <button onclick="closeOverrideModal()" class="flex-1 py-2 bg-slate-200 rounded-xl font-semibold text-sm">Cancel</button>
+                <button onclick="confirmOverride()" class="flex-1 py-2 bg-indigo-600 rounded-xl font-semibold text-white text-sm">Authorize</button>
             </div>
         </div>
     </div>
 
-    <!-- First-Time PIN Setup Modal -->
+    <!-- Setup Modal -->
     <div id="setup-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-200 text-center">
-            <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 font-bold">🔑</div>
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl text-center">
             <h2 class="text-2xl font-extrabold text-slate-800 mb-2">Welcome, <span id="setup-employee-name"></span>!</h2>
-            <p class="text-sm text-slate-600 mb-6">This is your first login. Please choose and enter a new **4-digit PIN** that you will use from now on.</p>
-            
-            <input type="password" id="new-pin-input" maxlength="4" placeholder="----" class="w-full text-center text-3xl tracking-widest py-3 bg-slate-50 border border-slate-300 rounded-xl mb-6 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            
-            <button onclick="saveNewPin()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 active:scale-98 transition rounded-2xl text-lg font-bold text-white shadow-lg shadow-indigo-200">
-                Save PIN & Continue
-            </button>
+            <p class="text-sm text-slate-600 mb-6">Choose a new **4-digit PIN**.</p>
+            <input type="password" id="new-pin-input" maxlength="4" placeholder="----" class="w-full text-center text-3xl tracking-widest py-3 bg-slate-50 border border-slate-300 rounded-xl mb-6 font-mono">
+            <button onclick="saveNewPin()" class="w-full py-4 bg-indigo-600 rounded-2xl text-lg font-bold text-white shadow-lg">Save PIN & Continue</button>
         </div>
     </div>
 
-    <!-- Large Success / Punch Confirmation Modal -->
+    <!-- Success Modal -->
     <div id="success-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-slate-200 text-center">
-            <div id="success-icon" class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 font-bold">✓</div>
-            <h2 id="success-title" class="text-3xl font-extrabold text-slate-800 mb-2">Clocked In Successfully</h2>
-            <p id="success-employee-name" class="text-xl font-semibold text-indigo-600 mb-6">Matt Cody</p>
-            
-            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-8 text-left space-y-3">
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-slate-500 font-medium">Status:</span>
-                    <span id="success-status-badge" class="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full font-bold text-xs">Clocked In</span>
-                </div>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-slate-500 font-medium">Location (QB Class):</span>
-                    <span id="success-class" class="font-bold text-slate-800">Bryant</span>
-                </div>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-slate-500 font-medium">Timestamp:</span>
-                    <span id="success-time" class="font-mono font-bold text-slate-800">Oct 15, 2026, 4:25 PM</span>
-                </div>
-                <div id="success-override-container" class="hidden flex justify-between items-center text-sm pt-2 border-t border-slate-200">
-                    <span class="text-amber-600 font-medium">Manager Override:</span>
-                    <span id="success-manager" class="font-bold text-amber-700">Brandon Hall</span>
-                </div>
+        <div class="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl text-center">
+            <h2 id="success-title" class="text-3xl font-extrabold text-slate-800 mb-2">Success</h2>
+            <p id="success-employee-name" class="text-xl font-semibold text-indigo-600 mb-6"></p>
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-8 text-left space-y-3 text-sm">
+                <div><b>Status:</b> <span id="success-status-badge"></span></div>
+                <div><b>Location:</b> <span id="success-class"></span></div>
+                <div><b>Time:</b> <span id="success-time"></span></div>
             </div>
-
-            <button onclick="closeSuccessModal()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 active:scale-98 transition rounded-2xl text-lg font-bold text-white shadow-lg shadow-indigo-200">
-                Done / Return to PIN Pad
-            </button>
+            <button onclick="closeSuccessModal()" class="w-full py-4 bg-indigo-600 rounded-2xl text-lg font-bold text-white">Done</button>
         </div>
     </div>
 
     <script>
-        // Updated full employee roster with unique temporary PINs and manager Brandon Hall (9999)
-        const defaultUsers = [
-            { pin: "1111", name: "Amber Thompson", role: "employee", allowedStart: "08:00", allowedEnd: "17:00", needsPinSetup: true },
-            { pin: "2222", name: "Brandon Hall", role: "employee", allowedStart: "08:00", allowedEnd: "17:00", needsPinSetup: true },
-            { pin: "3333", name: "Dylan Johnsey", role: "employee", allowedStart: "08:00", allowedEnd: "17:00", needsPinSetup: true },
-            { pin: "4444", name: "Ellie Dorey", role: "employee", allowedStart: "08:00", allowedEnd: "17:00", needsPinSetup: true },
-            { pin: "5555", name: "Hope Neel", role: "employee", allowedStart: "08:00", allowedEnd: "17:00", needsPinSetup: true },
-            { pin: "6666", name: "Jack Anderson", role: "employee", allowedStart: "08:00", allowedEnd: "17:00", needsPinSetup: true },
-            { pin: "7777", name: "Jack Campbell", role: "employee", allowedStart: "08:00", allowedEnd: "17:00", needsPinSetup: true },
-            { pin: "8888", name: "Jake Peterson", role: "employee", allowedStart: "08:00", allowedEnd: "17:00", needsPinSetup: true },
-            { pin: "3131", name: "Madyson Mazzola", role: "employee", allowedStart: "08:00", allowedEnd: "17:00", needsPinSetup: true },
-            { pin: "0000", name: "Michael Hickman", role: "employee", allowedStart: "08:00", allowedEnd: "17:00", needsPinSetup: true },
-            { pin: "1234", name: "Paige Johnsey", role: "employee", allowedStart: "08:00", allowedEnd: "17:00", needsPinSetup: true },            
-            { pin: "2345", name: "William Robison", role: "employee", allowedStart: "08:00", allowedEnd: "17:00", needsPinSetup: true },
-            { pin: "3456", name: "Zach Jeffery", role: "employee", allowedStart: "08:00", allowedEnd: "17:00", needsPinSetup: true },
-            { pin: "4567", name: "Zach Smith", role: "employee", allowedStart: "08:00", allowedEnd: "17:00", needsPinSetup: true },
-            { pin: "9999", name: "Brandon Hall", role: "manager", needsPinSetup: false }
-        ];
-
-        // Force-refresh users list into localStorage so new employees load immediately
-        let users = JSON.parse(localStorage.getItem('timeClockUsers'));
-        if (!users || users.length < defaultUsers.length) {
-            users = defaultUsers;
-            localStorage.setItem('timeClockUsers', JSON.stringify(users));
-        }
-
+        let users = [];
         let currentPin = "";
         let pendingUser = null;
         let setupUser = null;
 
+        async function loadTerminalData() {
+            users = await (await fetch('/api/employees')).json();
+            renderTeamStatus();
+        }
+
         function renderTeamStatus() {
             const timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
-            // Filter unique employee names
-            const employees = users.filter(u => u.role === "employee");
-            const container = document.getElementById('team-status-list');
-
-            container.innerHTML = employees.map(emp => {
-                const activeSession = timeLog.find(entry => entry.name === emp.name && !entry.clockOut);
-
-                if (activeSession) {
-                    return `
-                        <div class="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                            <div>
-                                <div class="font-bold text-slate-800 text-sm">${emp.name}</div>
-                                <div class="text-[11px] text-emerald-700 font-medium mt-0.5">📍 Working at: ${activeSession.qbClass}</div>
-                            </div>
-                            <span class="px-2.5 py-1 bg-emerald-500 text-white font-bold rounded-full text-[11px] shadow-sm animate-pulse">
-                                Clocked In 🔨👷‍♂️
-                            </span>
-                        </div>
-                    `;
-                } else {
-                    return `
-                        <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                            <div>
-                                <div class="font-bold text-slate-700 text-sm">${emp.name}</div>
-                                <div class="text-[11px] text-slate-400 mt-0.5">Status: Offline</div>
-                            </div>
-                            <span class="px-2.5 py-1 bg-slate-200 text-slate-600 font-semibold rounded-full text-[11px]">
-                                Clocked Out ☕😴
-                            </span>
-                        </div>
-                    `;
-                }
+            document.getElementById('team-status-list').innerHTML = users.filter(u => u.role === "employee").map(emp => {
+                const active = timeLog.find(e => e.name === emp.name && !e.clockOut);
+                return active ? `
+                    <div class="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                        <div><div class="font-bold text-slate-800 text-sm">${emp.name}</div><div class="text-[11px] text-emerald-700">📍 ${active.qbClass}</div></div>
+                        <span class="px-2.5 py-1 bg-emerald-500 text-white font-bold rounded-full text-[11px] animate-pulse">Clocked In</span>
+                    </div>` : `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <div><div class="font-bold text-slate-700 text-sm">${emp.name}</div><div class="text-[11px] text-slate-400">Offline</div></div>
+                        <span class="px-2.5 py-1 bg-slate-200 text-slate-600 font-semibold rounded-full text-[11px]">Offline</span>
+                    </div>`;
             }).join('');
         }
 
-        function pressNum(num) {
-            if (currentPin.length < 4) {
-                currentPin += num;
-                document.getElementById('pin-display').value = currentPin;
-            }
-        }
+        function pressNum(num) { if (currentPin.length < 4) { currentPin += num; document.getElementById('pin-display').value = currentPin; } }
+        function clearPin() { currentPin = ""; document.getElementById('pin-display').value = ""; }
 
-        function clearPin() {
-            currentPin = "";
-            document.getElementById('pin-display').value = "";
-        }
-
-        function submitPin() {
+        async function submitPin() {
+            await loadTerminalData();
             const user = users.find(u => u.pin === currentPin);
-            if (!user) {
-                alert("Invalid PIN.");
-                clearPin();
-                return;
-            }
-            if (user.role === "manager") {
-                alert("Manager PIN entered here does nothing. Use this terminal to punch in.");
-                clearPin();
-                return;
-            }
-
+            if (!user) { alert("Invalid PIN."); clearPin(); return; }
             if (user.needsPinSetup) {
                 setupUser = user;
                 document.getElementById('setup-employee-name').innerText = user.name;
-                document.getElementById('new-pin-input').value = "";
                 document.getElementById('setup-modal').classList.remove('hidden');
                 clearPin();
                 return;
             }
-
             processClockAction(user);
         }
 
-        function saveNewPin() {
-            const newPinVal = document.getElementById('new-pin-input').value;
-            if (newPinVal.length !== 4) {
-                alert("Please enter a valid 4-digit PIN.");
-                return;
+        async function saveNewPin() {
+            const pin = document.getElementById('new-pin-input').value;
+            if (pin.length !== 4) { alert("Enter a 4-digit PIN."); return; }
+            const res = await fetch('/api/employees/update-pin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: setupUser.id, pin }) });
+            if ((await res.json()).success) {
+                document.getElementById('setup-modal').classList.add('hidden');
+                await loadTerminalData();
+                processClockAction(users.find(u => u.id === setupUser.id));
+                setupUser = null;
             }
-
-            const existing = users.find(u => u.pin === newPinVal);
-            if (existing) {
-                alert("This PIN is already in use by another user. Please choose a different 4-digit combination.");
-                return;
-            }
-
-            setupUser.pin = newPinVal;
-            setupUser.needsPinSetup = false;
-
-            localStorage.setItem('timeClockUsers', JSON.stringify(users));
-
-            document.getElementById('setup-modal').classList.add('hidden');
-            alert(`Success, ${setupUser.name}! Your new PIN has been saved. You are now ready to clock in/out.`);
-            
-            processClockAction(setupUser);
-            setupUser = null;
         }
 
         function processClockAction(user) {
             const now = new Date();
             const currentTimeStr = now.toTimeString().substring(0, 5);
-            const isOutsideWindow = currentTimeStr < user.allowedStart || currentTimeStr > user.allowedEnd;
+            
+            // Determine day of week (mon, tue, wed, thu, fri, sat, sun)
+            const dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+            const todayKey = dayKeys[now.getDay()];
+            
+            const allowedStart = user[`${todayKey}Start`] || '08:00';
+            const allowedEnd = user[`${todayKey}End`] || '17:00';
+            const isOutsideWindow = currentTimeStr < allowedStart || currentTimeStr > allowedEnd;
 
-            const selectedLocationClass = document.getElementById('qb-class-select').value;
-
+            const qbClass = document.getElementById('qb-class-select').value;
             if (isOutsideWindow) {
                 pendingUser = user;
                 document.getElementById('override-modal').classList.remove('hidden');
             } else {
-                handlePunchFlow(user, selectedLocationClass, false);
+                handlePunchFlow(user, qbClass, false);
             }
             clearPin();
         }
 
-        function closeOverrideModal() {
-            document.getElementById('override-modal').classList.add('hidden');
-            pendingUser = null;
-            document.getElementById('manager-pin-input').value = "";
-        }
-
+        function closeOverrideModal() { document.getElementById('override-modal').classList.add('hidden'); pendingUser = null; }
         function confirmOverride() {
             const mPin = document.getElementById('manager-pin-input').value;
             const manager = users.find(u => u.pin === mPin && u.role === "manager");
-
-            if (!manager) {
-                alert("Invalid Manager PIN! Override denied.");
-                return;
-            }
-
-            const selectedLocationClass = document.getElementById('qb-class-select').value;
-            handlePunchFlow(pendingUser, selectedLocationClass, true, manager.name);
+            if (!manager) { alert("Invalid Manager PIN!"); return; }
+            handlePunchFlow(pendingUser, document.getElementById('qb-class-select').value, true, manager.name);
             closeOverrideModal();
         }
 
         function handlePunchFlow(user, qbClass, overrideStatus, managerName = "") {
             let timeLog = JSON.parse(localStorage.getItem('timeClockLog')) || [];
-
-            let activeEntry = timeLog.find(entry => entry.name === user.name && !entry.clockOut);
-
-            if (activeEntry) {
-                activeEntry.clockOut = new Date().toISOString();
-                
-                const start = new Date(activeEntry.clockIn);
-                const end = new Date(activeEntry.clockOut);
-                const diffMs = end - start;
-                const hours = diffMs / (1000 * 60 * 60);
-                activeEntry.hoursDecimal = parseFloat(hours.toFixed(2));
-
+            let active = timeLog.find(e => e.name === user.name && !e.clockOut);
+            if (active) {
+                active.clockOut = new Date().toISOString();
+                active.hoursDecimal = parseFloat(((new Date(active.clockOut) - new Date(active.clockIn)) / (1000 * 60 * 60)).toFixed(2));
                 localStorage.setItem('timeClockLog', JSON.stringify(timeLog));
-                showSuccessModal(user.name, qbClass, activeEntry.clockOut, false, overrideStatus, managerName);
+                showSuccess(user.name, qbClass, active.clockOut, false);
             } else {
-                const newEntry = {
-                    id: Date.now(),
-                    name: user.name,
-                    qbClass: qbClass,
-                    clockIn: new Date().toISOString(),
-                    clockOut: null,
-                    hoursDecimal: 0,
-                    override: overrideStatus,
-                    manager: managerName
-                };
-
+                const newEntry = { id: Date.now(), name: user.name, qbClass, clockIn: new Date().toISOString(), clockOut: null, hoursDecimal: 0, override: overrideStatus, manager: managerName };
                 timeLog.unshift(newEntry);
                 localStorage.setItem('timeClockLog', JSON.stringify(timeLog));
-                showSuccessModal(user.name, qbClass, newEntry.clockIn, true, overrideStatus, managerName);
+                showSuccess(user.name, qbClass, newEntry.clockIn, true);
             }
-
             renderTeamStatus();
         }
 
-        function showSuccessModal(name, qbClass, timeString, isClockIn, overrideStatus, managerName) {
+        function showSuccess(name, qbClass, timeStr, isClockIn) {
             document.getElementById('success-employee-name').innerText = name;
             document.getElementById('success-class').innerText = qbClass;
-            document.getElementById('success-time').innerText = new Date(timeString).toLocaleString();
-
-            const title = document.getElementById('success-title');
-            const badge = document.getElementById('success-status-badge');
-            const icon = document.getElementById('success-icon');
-
-            if (isClockIn) {
-                title.innerText = "Clocked In Successfully";
-                badge.innerText = "Clocked In";
-                badge.className = "px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full font-bold text-xs";
-                icon.innerText = "✓";
-                icon.className = "w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 font-bold";
-            } else {
-                title.innerText = "Clocked Out Successfully";
-                badge.innerText = "Clocked Out";
-                badge.className = "px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-bold text-xs";
-                icon.innerText = "👋";
-                icon.className = "w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 font-bold";
-            }
-
-            const overrideContainer = document.getElementById('success-override-container');
-            if (overrideStatus) {
-                overrideContainer.classList.remove('hidden');
-                document.getElementById('success-manager').innerText = managerName;
-            } else {
-                overrideContainer.classList.add('hidden');
-            }
-
+            document.getElementById('success-time').innerText = new Date(timeStr).toLocaleString();
+            document.getElementById('success-title').innerText = isClockIn ? "Clocked In Successfully" : "Clocked Out Successfully";
+            document.getElementById('success-status-badge').innerText = isClockIn ? "Clocked In" : "Clocked Out";
             document.getElementById('success-modal').classList.remove('hidden');
         }
 
-        function closeSuccessModal() {
-            document.getElementById('success-modal').classList.add('hidden');
-            clearPin();
-        }
+        function closeSuccessModal() { document.getElementById('success-modal').classList.add('hidden'); clearPin(); }
 
-        renderTeamStatus();
+        loadTerminalData();
     </script>
 </body>
 </html>
