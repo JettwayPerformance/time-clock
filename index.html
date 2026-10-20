@@ -22,9 +22,21 @@
 
         <!-- PIN Terminal Section (2 Columns) -->
         <section class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
-            <div class="text-center space-y-1">
-                <h2 id="terminal-title" class="text-xl font-bold text-slate-900">Enter Your 4-Digit PIN</h2>
-                <p id="terminal-subtitle" class="text-xs text-slate-500">Type your PIN below to clock in or out.</p>
+            <div class="text-center space-y-3">
+                <!-- Location Selector Above PIN -->
+                <div class="max-w-xs mx-auto space-y-1">
+                    <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Select Location / Class</label>
+                    <select id="location-select" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="Bryant">📍 Bryant</option>
+                        <option value="Cabot">📍 Cabot</option>
+                        <option value="Maumelle">📍 Maumelle</option>
+                    </select>
+                </div>
+
+                <div>
+                    <h2 id="terminal-title" class="text-xl font-bold text-slate-900 mt-2">Enter Your 4-Digit PIN</h2>
+                    <p id="terminal-subtitle" class="text-xs text-slate-500">Type on your keyboard or use the keypad below.</p>
+                </div>
             </div>
 
             <!-- PIN Display Screen -->
@@ -49,7 +61,7 @@
             </div>
         </section>
 
-        <!-- Live Team Status Sidebar (1 Column) -->
+        <!-- Live Team Status Sidebar -->
         <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
             <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2"><span>🟢</span><span>Live Team Status</span></h3>
             <div id="team-status-list" class="space-y-3 max-h-[500vh] overflow-y-auto pr-1">
@@ -59,19 +71,13 @@
 
     </main>
 
-    <!-- Location & Action Modal (Popups when PIN is entered) -->
-    <div id="action-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
-            <h3 id="modal-employee-name" class="text-base font-bold text-slate-900 text-center">Welcome</h3>
-            <p id="modal-action-text" class="text-xs text-slate-500 text-center">Select your QuickBooks Location/Class:</p>
-            
-            <div class="space-y-2">
-                <button onclick="executeClockAction('Bryant')" class="w-full py-3 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold text-xs text-slate-800 transition border border-slate-200">📍 Bryant</button>
-                <button onclick="executeClockAction('Cabot')" class="w-full py-3 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold text-xs text-slate-800 transition border border-slate-200">📍 Cabot</button>
-                <button onclick="executeClockAction('Maumelle')" class="w-full py-3 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold text-xs text-slate-800 transition border border-slate-200">📍 Maumelle</button>
-            </div>
-
-            <button onclick="closeActionModal()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold text-xs text-slate-600 transition">Cancel</button>
+    <!-- First-Time PIN Setup Modal -->
+    <div id="setup-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4 text-center">
+            <h3 id="setup-modal-title" class="text-base font-bold text-slate-900">Set Your Personal PIN</h3>
+            <p class="text-xs text-slate-500">This is your first time logging in. Please choose a secure 4-digit PIN:</p>
+            <input type="password" id="new-pin-input" maxlength="4" placeholder="----" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-center text-2xl font-mono text-slate-900 tracking-widest focus:outline-none">
+            <button onclick="saveNewPin()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-xs text-white transition">Save & Continue</button>
         </div>
     </div>
 
@@ -79,13 +85,34 @@
     <script>
         let currentPin = "";
         let users = [];
-        let activeEmployee = null;
+        let setupEmployeeId = null;
 
         async function initTerminal() {
             const res = await fetch('/api/employees');
             users = await res.json();
             renderTeamStatus();
         }
+
+        // Global Keyboard Listener to auto-capture typing for PIN
+        window.addEventListener('keydown', (e) => {
+            // Do not capture if user is typing inside modal inputs or dropdowns
+            if (document.activeElement.tagName === 'SELECT' || document.getElementById('setup-modal').classList.contains('flex')) {
+                return;
+            }
+
+            if (e.key >= '0' && e.key <= '9') {
+                pressKey(e.key);
+            } else if (e.key === 'Backspace') {
+                if (currentPin.length > 0) {
+                    currentPin = currentPin.slice(0, -1);
+                    document.getElementById('pin-display').value = currentPin;
+                }
+            } else if (e.key === 'Enter') {
+                if (currentPin.length === 4) {
+                    submitPin();
+                }
+            }
+        });
 
         function pressKey(num) {
             if (currentPin.length < 4) {
@@ -112,8 +139,19 @@
                 return;
             }
 
-            activeEmployee = emp;
+            // Check if first-time PIN setup is required
+            if (emp.needsPinSetup === 1) {
+                setupEmployeeId = emp.id;
+                document.getElementById('setup-modal').classList.remove('hidden');
+                document.getElementById('setup-modal').classList.add('flex');
+                document.getElementById('new-pin-input').value = "";
+                document.getElementById('new-pin-input').focus();
+                return;
+            }
+
+            const selectedLocation = document.getElementById('location-select').value;
             
+            // Fetch latest punches
             const res = await fetch('/api/punches');
             const punches = await res.json();
             const activePunch = punches.find(p => p.name === emp.name && !p.clockOut);
@@ -123,19 +161,39 @@
                     await completeClockOut(activePunch);
                 }
             } else {
-                document.getElementById('modal-employee-name').innerText = `Hello, ${emp.name}`;
-                document.getElementById('action-modal').classList.remove('hidden');
-                document.getElementById('action-modal').classList.add('flex');
+                await executeClockIn(emp, selectedLocation);
             }
         }
 
-        async function executeClockAction(qbClass) {
-            closeActionModal();
-            const now = new Date().toISOString();
+        async function saveNewPin() {
+            const newPin = document.getElementById('new-pin-input').value.trim();
+            if (newPin.length !== 4 || isNaN(newPin)) {
+                alert("Please enter a valid 4-digit PIN.");
+                return;
+            }
+
+            const res = await fetch('/api/employees/update-pin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: setupEmployeeId, pin: newPin })
+            });
+            const data = await res.json();
             
+            if (data.success) {
+                document.getElementById('setup-modal').classList.remove('flex');
+                document.getElementById('setup-modal').classList.add('hidden');
+                alert("PIN successfully set! You are now ready to clock in/out.");
+                await initTerminal();
+            } else {
+                alert(data.error || "PIN already in use. Please choose another.");
+            }
+        }
+
+        async function executeClockIn(emp, qbClass) {
+            const now = new Date().toISOString();
             const payload = {
                 id: Date.now(),
-                name: activeEmployee.name,
+                name: emp.name,
                 qbClass: qbClass,
                 clockIn: now,
                 clockOut: null,
@@ -150,7 +208,7 @@
                 body: JSON.stringify(payload)
             });
 
-            alert(`${activeEmployee.name} successfully clocked in at ${qbClass}!`);
+            alert(`${emp.name} successfully clocked in at ${qbClass}!`);
             renderTeamStatus();
         }
 
@@ -179,30 +237,30 @@
             renderTeamStatus();
         }
 
-        function closeActionModal() {
-            document.getElementById('action-modal').classList.remove('flex');
-            document.getElementById('action-modal').classList.add('hidden');
-        }
-
         async function renderTeamStatus() {
             const res = await fetch('/api/punches');
             const timeLog = await res.json();
             
-            const activeStaff = users.filter(u => u.name).sort((a, b) => a.name.localeCompare(b.name));
+            // Only render staff where showOnClock is enabled (1)
+            const activeStaff = users.filter(u => u.name && u.showOnClock === 1).sort((a, b) => a.name.localeCompare(b.name));
             
             document.getElementById('team-status-list').innerHTML = activeStaff.map(emp => {
                 const active = timeLog.find(e => e.name === emp.name && !e.clockOut);
                 return active ? `
                     <div class="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
                         <div>
-                            <div class="font-bold text-slate-900 text-xs">${emp.name}</div>
+                            <div class="font-bold text-slate-900 text-xs flex items-center space-x-1.5">
+                                <span>🎵</span><span>${emp.name}</span>
+                            </div>
                             <div class="text-[11px] text-emerald-700 font-medium">📍 ${active.qbClass}</div>
                         </div>
                         <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold rounded-full text-[10px]">Clocked In</span>
                     </div>` : `
                     <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
                         <div>
-                            <div class="font-bold text-slate-700 text-xs">${emp.name}</div>
+                            <div class="font-bold text-slate-700 text-xs flex items-center space-x-1.5">
+                                <span>🎵</span><span>${emp.name}</span>
+                            </div>
                             <div class="text-[11px] text-slate-400">Offline</div>
                         </div>
                         <span class="px-2.5 py-1 bg-slate-200 text-slate-600 font-semibold rounded-full text-[10px]">Offline</span>

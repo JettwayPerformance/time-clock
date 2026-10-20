@@ -18,13 +18,14 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
     } else {
         console.log('Connected to the SQLite database.');
         
-        // Employees Table
+        // Employees Table with role, showOnClock, and pay rate
         db.run(`CREATE TABLE IF NOT EXISTS employees (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             pin TEXT UNIQUE,
             name TEXT,
-            role TEXT,
-            needsPinSetup INTEGER,
+            role TEXT DEFAULT 'employee',
+            needsPinSetup INTEGER DEFAULT 1,
+            showOnClock INTEGER DEFAULT 1,
             payRate REAL DEFAULT 20.00,
             monStart TEXT DEFAULT '08:00', monEnd TEXT DEFAULT '17:00',
             tueStart TEXT DEFAULT '08:00', tueEnd TEXT DEFAULT '17:00',
@@ -34,28 +35,31 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
             satStart TEXT DEFAULT '08:00', satEnd TEXT DEFAULT '17:00',
             sunStart TEXT DEFAULT '08:00', sunEnd TEXT DEFAULT '17:00'
         )`, () => {
+            // Safely add columns if upgrading from an older DB version
+            db.run(`ALTER TABLE employees ADD COLUMN showOnClock INTEGER DEFAULT 1`, () => {});
+            db.run(`ALTER TABLE employees ADD COLUMN role TEXT DEFAULT 'employee'`, () => {});
             db.run(`ALTER TABLE employees ADD COLUMN payRate REAL DEFAULT 20.00`, () => {});
 
             db.get(`SELECT COUNT(*) as count FROM employees`, (err, row) => {
                 if (row.count === 0) {
                     const defaultUsers = [
-                        ["1111", "Amber Thompson", "employee", 1, 20.00],
-                        ["2222", "Brandon Hall", "employee", 1, 20.00],
-                        ["3333", "Dylan Johnsey", "employee", 1, 20.00],
-                        ["4444", "Ellie Dorey", "employee", 1, 20.00],
-                        ["5555", "Hope Neel", "employee", 1, 20.00],
-                        ["6666", "Jack Anderson", "employee", 1, 20.00],
-                        ["7777", "Jack Campbell", "employee", 1, 20.00],
-                        ["8888", "Jake Peterson", "employee", 1, 20.00],
-                        ["3131", "Madyson Mazzola", "employee", 1, 20.00],
-                        ["0000", "Michael Hickman", "employee", 1, 20.00],
-                        ["1234", "Paige Johnsey", "employee", 1, 20.00],
-                        ["2345", "William Robison", "employee", 1, 20.00],
-                        ["3456", "Zach Jeffery", "employee", 1, 20.00],
-                        ["4567", "Zach Smith", "employee", 1, 20.00],
-                        ["9999", "Brandon Hall", "manager", 0, 30.00]
+                        ["1111", "Amber Thompson", "employee", 1, 1, 20.00],
+                        ["2222", "Brandon Hall", "employee", 1, 1, 20.00],
+                        ["3333", "Dylan Johnsey", "employee", 1, 1, 20.00],
+                        ["4444", "Ellie Dorey", "employee", 1, 1, 20.00],
+                        ["5555", "Hope Neel", "employee", 1, 1, 20.00],
+                        ["6666", "Jack Anderson", "employee", 1, 1, 20.00],
+                        ["7777", "Jack Campbell", "employee", 1, 1, 20.00],
+                        ["8888", "Jake Peterson", "employee", 1, 1, 20.00],
+                        ["3131", "Madyson Mazzola", "employee", 1, 1, 20.00],
+                        ["0000", "Michael Hickman", "employee", 1, 1, 20.00],
+                        ["1234", "Paige Johnsey", "employee", 1, 1, 20.00],
+                        ["2345", "William Robison", "employee", 1, 1, 20.00],
+                        ["3456", "Zach Jeffery", "employee", 1, 1, 20.00],
+                        ["4567", "Zach Smith", "employee", 1, 1, 20.00],
+                        ["9999", "Brandon Hall", "manager", 0, 1, 30.00]
                     ];
-                    const stmt = db.prepare(`INSERT INTO employees (pin, name, role, needsPinSetup, payRate) VALUES (?, ?, ?, ?, ?)`);
+                    const stmt = db.prepare(`INSERT INTO employees (pin, name, role, needsPinSetup, showOnClock, payRate) VALUES (?, ?, ?, ?, ?, ?)`);
                     defaultUsers.forEach(u => stmt.run(u));
                     stmt.finalize();
                     console.log('Seeded employees.');
@@ -86,11 +90,19 @@ app.get('/api/employees', (req, res) => {
 });
 
 app.post('/api/employees/add', requireAuth, (req, res) => {
-    const { name, pin, payRate } = req.body;
-    db.run(`INSERT INTO employees (pin, name, role, needsPinSetup, payRate) VALUES (?, ?, 'employee', 1, ?)`, 
-    [pin, name, payRate || 20.00], function(err) {
+    const { name, pin, role, payRate, showOnClock } = req.body;
+    db.run(`INSERT INTO employees (pin, name, role, needsPinSetup, showOnClock, payRate) VALUES (?, ?, ?, 1, ?, ?)`, 
+    [pin, name, role || 'employee', showOnClock !== undefined ? showOnClock : 1, payRate || 20.00], function(err) {
         if (err) return res.status(400).json({ error: "PIN already in use." });
         res.json({ success: true, id: this.lastID });
+    });
+});
+
+app.post('/api/employees/toggle-visibility', requireAuth, (req, res) => {
+    const { id, showOnClock } = req.body;
+    db.run(`UPDATE employees SET showOnClock = ? WHERE id = ?`, [showOnClock, id], function(err) {
+        if (err) return res.status(400).json({ error: err.message });
+        res.json({ success: true });
     });
 });
 
@@ -113,7 +125,7 @@ app.post('/api/employees/reset-pin', requireAuth, (req, res) => {
 app.post('/api/employees/update-pin', (req, res) => {
     const { id, pin } = req.body;
     db.run(`UPDATE employees SET pin = ?, needsPinSetup = 0 WHERE id = ?`, [pin, id], function(err) {
-        if (err) return res.status(400).json({ error: "PIN already taken." });
+        if (err) return res.status(400).json({ error: "PIN already taken or invalid." });
         res.json({ success: true });
     });
 });
