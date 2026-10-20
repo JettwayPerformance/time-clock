@@ -149,24 +149,40 @@
 
         function populatePayPeriods(punches) {
             const select = document.getElementById('pay-period-select');
-            // Generate bi-weekly ranges based on punches
             const periods = new Set();
+
+            function getMonday(d) {
+                const date = new Date(d);
+                const day = date.getDay();
+                const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+                return new Date(date.setDate(diff));
+            }
+
             punches.forEach(p => {
                 if (!p.clockIn) return;
-                const d = new Date(p.clockIn);
-                // Simple bi-weekly grouping key or month/week
-                const startOfWeek = new Date(d);
-                startOfWeek.setDate(d.getDate() - d.getDay());
-                periods.add(startOfWeek.toISOString().split('T')[0]);
+                const punchDate = new Date(p.clockIn);
+                let monday = getMonday(punchDate);
+                
+                const anchor = new Date('2026-10-12');
+                const diffTime = monday - anchor;
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                const weekNumber = Math.floor(diffDays / 7);
+                
+                if (weekNumber % 2 !== 0) {
+                    monday.setDate(monday.getDate() - 7);
+                }
+
+                periods.add(monday.toISOString().split('T')[0]);
             });
 
-            // Keep "All" and add dynamic options if available
             let html = '<option value="all">All Records</option>';
             Array.from(periods).sort().reverse().forEach(dateStr => {
-                const start = new Date(dateStr);
+                const start = new Date(dateStr + 'T00:00:00');
                 const end = new Date(start);
                 end.setDate(start.getDate() + 13);
-                html += `<option value="${dateStr}">${start.toLocaleDateString()} - ${end.toLocaleDateString()}</option>`;
+                
+                const label = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+                html += `<option value="${dateStr}">${label}</option>`;
             });
             select.innerHTML = html;
         }
@@ -176,15 +192,18 @@
             let filtered = allPunchesCache;
 
             if (filterVal !== 'all') {
-                const startDate = new Date(filterVal);
+                const startDate = new Date(filterVal + 'T00:00:00');
                 const endDate = new Date(startDate);
                 endDate.setDate(startDate.getDate() + 14);
 
                 filtered = allPunchesCache.filter(p => {
+                    if (!p.clockIn) return false;
                     const punchDate = new Date(p.clockIn);
                     return punchDate >= startDate && punchDate < endDate;
                 });
             }
+
+            document.getElementById('punch-count').innerText = `${filtered.length} records`;
 
             document.getElementById('punches-table-body').innerHTML = filtered.map(p => `
                 <tr class="hover:bg-slate-800/40 transition">
