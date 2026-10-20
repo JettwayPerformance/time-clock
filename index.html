@@ -93,12 +93,19 @@
             renderTeamStatus();
         }
 
-        // Global Keyboard Listener to auto-capture typing for PIN
+        // Global Keyboard Listener
         window.addEventListener('keydown', (e) => {
-            if (document.activeElement.tagName === 'SELECT' || document.getElementById('setup-modal').classList.contains('flex')) {
+            if (document.activeElement.tagName === 'SELECT') return;
+
+            // If setup modal is open, let Enter trigger saveNewPin
+            if (document.getElementById('setup-modal').classList.contains('flex')) {
+                if (e.key === 'Enter') {
+                    saveNewPin();
+                }
                 return;
             }
 
+            // Normal PIN entry keypad handler
             if (e.key >= '0' && e.key <= '9') {
                 pressKey(e.key);
             } else if (e.key === 'Backspace') {
@@ -156,7 +163,7 @@
             const activePunch = punches.find(p => p.name === emp.name && !p.clockOut);
 
             if (activePunch) {
-                if (confirm(`${emp.name}, would you like to clock out?`)) {
+                if (confirm(`Welcome, ${emp.name}!\nWould you like to clock out?`)) {
                     await completeClockOut(activePunch, emp.name);
                 }
             } else {
@@ -201,14 +208,19 @@
                 manager: null
             };
 
-            await fetch('/api/punches/save', {
+            const res = await fetch('/api/punches/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+            const data = await res.json();
 
-            alert(`${emp.name} successfully clocked in at ${qbClass}!`);
-            renderTeamStatus();
+            if (data.success) {
+                alert(`${emp.name} successfully clocked in at ${qbClass}!`);
+                renderTeamStatus();
+            } else {
+                alert("Error recording clock-in. Please try again.");
+            }
         }
 
         async function completeClockOut(activePunch, empName) {
@@ -226,14 +238,19 @@
                 hoursDecimal: hoursDecimal
             };
 
-            await fetch('/api/punches/save', {
+            const res = await fetch('/api/punches/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+            const data = await res.json();
 
-            alert(`${empName} successfully clocked out. Total hours: ${hoursDecimal}`);
-            renderTeamStatus();
+            if (data.success) {
+                alert(`${empName} successfully clocked out. Total hours: ${hoursDecimal}`);
+                renderTeamStatus();
+            } else {
+                alert("Error recording clock-out. Please try again.");
+            }
         }
 
         async function renderTeamStatus() {
