@@ -114,18 +114,15 @@
 
             activeEmployee = emp;
             
-            // Fetch latest punch status
             const res = await fetch('/api/punches');
             const punches = await res.json();
             const activePunch = punches.find(p => p.name === emp.name && !p.clockOut);
 
             if (activePunch) {
-                // Already clocked in -> Clock out directly
                 if (confirm(`${emp.name}, would you like to clock out?`)) {
                     await completeClockOut(activePunch);
                 }
             } else {
-                // Not clocked in -> Show location modal
                 document.getElementById('modal-employee-name').innerText = `Hello, ${emp.name}`;
                 document.getElementById('action-modal').classList.remove('hidden');
                 document.getElementById('action-modal').classList.add('flex');
