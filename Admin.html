@@ -16,7 +16,7 @@
         </div>
         <div class="flex items-center space-x-3">
             <a href="/" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition">🕒 Go to Time Clock</a>
-            <button onclick="wipeDataModal()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-semibold transition">⚠️ Wipe Punches Data</button>
+            <button onclick="wipeData()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-semibold transition">⚠️ Wipe Punches Data</button>
         </div>
     </header>
 
@@ -27,8 +27,8 @@
         <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
             <div class="flex justify-between items-center">
                 <div>
-                    <h3 class="text-base font-bold text-white">Staff & Manager Directory</h3>
-                    <p class="text-xs text-slate-400">Manage PINs, pay rates, roles, clock visibility, and weekly schedules.</p>
+                    <h3 class="text-base font-bold text-white">Staff Directory</h3>
+                    <p class="text-xs text-slate-400">Manage employee PINs, pay rates, and weekly schedules.</p>
                 </div>
                 <button onclick="openStaffModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-semibold text-white transition shadow-lg shadow-indigo-600/20">Manage Staff</button>
             </div>
@@ -66,26 +66,18 @@
     <div id="staff-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
             <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-                <h3 class="font-bold text-sm text-white">Staff & Manager Directory</h3>
+                <h3 class="font-bold text-sm text-white">Staff Directory</h3>
                 <button onclick="closeStaffModal()" class="text-slate-400 hover:text-white text-base">✕</button>
             </div>
             <div class="p-6 overflow-y-auto space-y-6 flex-1">
                 
                 <!-- Add New Staff Form -->
                 <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800 space-y-3">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Add New Staff / Manager</h4>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Add New Staff Member</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                         <input type="text" id="new-emp-name" placeholder="Full Name" class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200">
                         <input type="text" id="new-emp-pin" maxlength="4" placeholder="Temp 4-Digit PIN" class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 font-mono">
                         <input type="number" step="0.01" id="new-emp-rate" placeholder="Pay Rate ($/hr)" value="20.00" class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 font-mono">
-                        <select id="new-emp-role" class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200">
-                            <option value="employee">Role: Employee</option>
-                            <option value="manager">Role: Manager</option>
-                        </select>
-                    </div>
-                    <div class="flex items-center space-x-2 text-xs text-slate-300 pt-1">
-                        <input type="checkbox" id="new-emp-show" checked class="w-4 h-4 accent-indigo-600 rounded">
-                        <label for="new-emp-show">Show on Time Clock terminal & live status</label>
                     </div>
                     <button onclick="addNewEmployee()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold text-xs text-white transition">Add Staff Member</button>
                 </div>
@@ -95,10 +87,9 @@
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-950 text-slate-400 uppercase tracking-wider font-mono">
                             <tr>
-                                <th class="p-3">Name & Role</th>
+                                <th class="p-3">Name</th>
                                 <th class="p-3">PIN</th>
                                 <th class="p-3">Pay Rate</th>
-                                <th class="p-3">Clock Visibility</th>
                                 <th class="p-3 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -163,10 +154,7 @@
             await fetchEmployees();
             document.getElementById('staff-table-body').innerHTML = employeesCache.map(emp => `
                 <tr class="hover:bg-slate-800/40 transition">
-                    <td class="p-3 font-medium text-white">
-                        ${emp.name} 
-                        <span class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${emp.role === 'manager' ? 'bg-indigo-600/30 text-indigo-300' : 'bg-slate-800 text-slate-400'}">${emp.role || 'employee'}</span>
-                    </td>
+                    <td class="p-3 font-medium text-white">${emp.name}</td>
                     <td class="p-3 text-slate-400 font-mono">${emp.pin}</td>
                     <td class="p-3">
                         <div class="flex items-center space-x-1">
@@ -174,12 +162,6 @@
                             <input type="number" step="0.01" id="rate-${emp.id}" value="${emp.payRate || 20.00}" onchange="updatePayRate(${emp.id})" class="w-20 bg-slate-950 border border-slate-800 rounded p-1 text-white font-mono text-center">
                             <span class="text-slate-500 text-[10px]">/hr</span>
                         </div>
-                    </td>
-                    <td class="p-3">
-                        <label class="flex items-center space-x-1.5 text-[11px] text-slate-300 cursor-pointer">
-                            <input type="checkbox" ${emp.showOnClock !== 0 ? 'checked' : ''} onchange="toggleClockStatus(${emp.id}, this.checked)" class="accent-indigo-600 w-3.5 h-3.5 rounded">
-                            <span>Show on Clock</span>
-                        </label>
                     </td>
                     <td class="p-3 text-right space-x-1">
                         <button onclick="openScheduleModal(${emp.id})" class="px-2 py-1 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 rounded text-[10px] font-semibold transition">Schedule</button>
@@ -201,15 +183,13 @@
             const name = document.getElementById('new-emp-name').value.trim();
             const pin = document.getElementById('new-emp-pin').value.trim();
             const payRate = parseFloat(document.getElementById('new-emp-rate').value) || 20.00;
-            const role = document.getElementById('new-emp-role').value;
-            const showOnClock = document.getElementById('new-emp-show').checked;
 
             if (!name || pin.length !== 4) { alert("Please enter a valid name and a 4-digit PIN."); return; }
             
             const res = await fetch('/api/employees/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, pin, payRate, role, showOnClock })
+                body: JSON.stringify({ name, pin, payRate })
             });
             const data = await res.json();
             if (data.success) {
@@ -230,14 +210,6 @@
             });
         }
 
-        async function toggleClockStatus(id, showOnClock) {
-            await fetch('/api/employees/toggle-clock', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, showOnClock })
-            });
-        }
-
         async function resetPin(id) {
             const newPin = prompt("Enter a new 4-digit PIN for this employee:");
             if (!newPin || newPin.length !== 4) return;
@@ -250,7 +222,7 @@
         }
 
         async function deleteEmployee(id) {
-            if (!confirm("Are you sure you want to delete this staff member?")) return;
+            if (!confirm("Are you sure you want to delete this employee?")) return;
             await fetch('/api/employees/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -326,7 +298,7 @@
             fetchPunches();
         }
 
-        async function wipeDataModal() {
+        async function wipeData() {
             if (!confirm("⚠️ WARNING: This will delete ALL recorded time punches. Are you sure?")) return;
             const res = await fetch('/api/punches/wipe', { method: 'POST' });
             if ((await res.json()).success) {

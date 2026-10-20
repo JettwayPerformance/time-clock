@@ -190,9 +190,7 @@
         async function renderTeamStatus() {
             const res = await fetch('/api/punches');
             const timeLog = await res.json();
-            
-            // Only show staff members where showOnClock is not explicitly set to 0 (false)
-            const activeStaff = users.filter(u => u.showOnClock !== 0 && u.name).sort((a, b) => a.name.localeCompare(b.name));
+            const activeStaff = users.filter(u => u.name).sort((a, b) => a.name.localeCompare(b.name));
             
             document.getElementById('team-status-list').innerHTML = activeStaff.map(emp => {
                 const active = timeLog.find(e => e.name === emp.name && !e.clockOut);
