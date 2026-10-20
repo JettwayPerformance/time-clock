@@ -6,255 +6,215 @@
     <title>Time Clock Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 font-sans min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
 
-    <div class="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        <div class="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
-            <div class="text-center mb-6">
-                <h1 class="text-2xl font-bold text-slate-800">Time Clock Terminal</h1>
-                <p class="text-sm font-medium text-indigo-600 mt-1">Select Location & Enter PIN</p>
-            </div>
-
-            <div class="mb-6">
-                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Location</label>
-                <select id="qb-class-select" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-700 font-medium focus:outline-none">
-                    <option value="Bryant">Bryant</option>
-                    <option value="Cabot">Cabot</option>
-                    <option value="Maumelle">Maumelle</option>
-                </select>
-            </div>
-
-            <div class="mb-6">
-                <input type="password" id="pin-display" readonly maxlength="4" autocomplete="new-password" placeholder="----" class="w-full text-center text-3xl tracking-widest py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-700 font-mono focus:outline-none">
-            </div>
-
-            <div class="grid grid-cols-3 gap-3">
-                <button onclick="pressNum('1')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">1</button>
-                <button onclick="pressNum('2')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">2</button>
-                <button onclick="pressNum('3')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">3</button>
-                <button onclick="pressNum('4')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">4</button>
-                <button onclick="pressNum('5')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">5</button>
-                <button onclick="pressNum('6')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">6</button>
-                <button onclick="pressNum('7')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">7</button>
-                <button onclick="pressNum('8')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">8</button>
-                <button onclick="pressNum('9')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">9</button>
-                <button onclick="clearPin()" class="py-4 bg-rose-50 hover:bg-rose-100 rounded-xl text-sm font-bold text-rose-600">Clear</button>
-                <button onclick="pressNum('0')" class="py-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xl font-bold text-slate-700">0</button>
-                <button onclick="submitPin()" class="py-4 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-sm font-bold text-white shadow-lg">Enter</button>
-            </div>
+    <!-- Top Navigation -->
+    <header class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-3">
+            <span class="text-xl">🕒</span>
+            <h1 class="font-bold text-lg text-white">Time Clock Terminal</h1>
         </div>
+        <a href="/admin.html" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition">⚙️ Admin Dashboard</a>
+    </header>
 
-        <div class="bg-white rounded-2xl shadow-xl p-8 border border-slate-200 max-h-[600px] overflow-y-auto">
-            <h2 class="text-lg font-bold text-slate-800 mb-1">Live Team Status</h2>
-            <p class="text-xs text-slate-500 mb-6">Real-time status of crew members</p>
-            <div id="team-status-list" class="space-y-3"></div>
-        </div>
-    </div>
+    <!-- Main Terminal Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
-    <!-- Manager Override Modal -->
-    <div id="override-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center">
-            <h3 class="text-lg font-bold text-slate-800 mb-2">Manager Override Required</h3>
-            <p class="text-sm text-slate-600 mb-4">Outside approved shift window for today. Have manager enter PIN.</p>
-            <input type="password" id="manager-pin-input" maxlength="4" autocomplete="new-password" placeholder="Manager PIN" class="w-full text-center text-2xl tracking-widest py-2 bg-slate-50 border border-slate-300 rounded-xl mb-4 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <div class="flex space-x-2">
-                <button onclick="closeOverrideModal()" class="flex-1 py-2 bg-slate-200 rounded-xl font-semibold text-sm">Cancel</button>
-                <button onclick="confirmOverride()" class="flex-1 py-2 bg-indigo-600 rounded-xl font-semibold text-white text-sm">Authorize</button>
+        <!-- PIN Terminal Section (2 Columns) -->
+        <section class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+            <div class="text-center space-y-1">
+                <h2 id="terminal-title" class="text-xl font-bold text-white">Enter Your 4-Digit PIN</h2>
+                <p id="terminal-subtitle" class="text-xs text-slate-400">Type your PIN below to clock in or out.</p>
             </div>
-        </div>
-    </div>
 
-    <!-- Setup Modal -->
-    <div id="setup-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl text-center">
-            <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 font-bold">🔑</div>
-            <h2 class="text-2xl font-extrabold text-slate-800 mb-2">Welcome, <span id="setup-employee-name"></span>!</h2>
-            <p class="text-sm text-slate-600 mb-6">Please choose and enter a new **4-digit PIN**.</p>
-            <input type="password" id="new-pin-input" maxlength="4" autocomplete="new-password" placeholder="----" class="w-full text-center text-3xl tracking-widest py-3 bg-slate-50 border border-slate-300 rounded-xl mb-6 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <button onclick="saveNewPin()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 active:scale-98 transition rounded-2xl text-lg font-bold text-white shadow-lg shadow-indigo-200">
-                Save PIN & Continue
-            </button>
+            <!-- PIN Display Screen -->
+            <div class="max-w-xs mx-auto">
+                <input type="password" id="pin-display" readonly maxlength="4" placeholder="----" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-center text-3xl font-mono text-white tracking-widest focus:outline-none">
+            </div>
+
+            <!-- Number Pad -->
+            <div class="max-w-xs mx-auto grid grid-cols-3 gap-3">
+                <button onclick="pressKey('1')" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-lg text-white transition">1</button>
+                <button onclick="pressKey('2')" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-lg text-white transition">2</button>
+                <button onclick="pressKey('3')" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-lg text-white transition">3</button>
+                <button onclick="pressKey('4')" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-lg text-white transition">4</button>
+                <button onclick="pressKey('5')" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-lg text-white transition">5</button>
+                <button onclick="pressKey('6')" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-lg text-white transition">6</button>
+                <button onclick="pressKey('7')" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-lg text-white transition">7</button>
+                <button onclick="pressKey('8')" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-lg text-white transition">8</button>
+                <button onclick="pressKey('9')" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-lg text-white transition">9</button>
+                <button onclick="clearPin()" class="p-4 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 rounded-xl font-semibold text-sm transition">Clear</button>
+                <button onclick="pressKey('0')" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-lg text-white transition">0</button>
+                <button onclick="submitPin()" class="p-4 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold text-sm text-white transition">Enter</button>
+            </div>
+        </section>
+
+        <!-- Live Team Status Sidebar (1 Column) -->
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+            <h3 class="text-base font-bold text-white flex items-center space-x-2"><span>🟢</span><span>Live Team Status</span></h3>
+            <div id="team-status-list" class="space-y-3 max-h-[500vh] overflow-y-auto pr-1">
+                <!-- Dynamic Status Loaded Here -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Location & Action Modal (Popups when PIN is entered) -->
+    <div id="action-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <h3 id="modal-employee-name" class="text-base font-bold text-white text-center">Welcome</h3>
+            <p id="modal-action-text" class="text-xs text-slate-400 text-center">Select your QuickBooks Location/Class:</p>
+            
+            <div class="space-y-2">
+                <button onclick="executeClockAction('Bryant')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-semibold text-xs text-white transition">📍 Bryant</button>
+                <button onclick="executeClockAction('Cabot')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-semibold text-xs text-white transition">📍 Cabot</button>
+                <button onclick="executeClockAction('Maumelle')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-semibold text-xs text-white transition">📍 Maumelle</button>
+            </div>
+
+            <button onclick="closeActionModal()" class="w-full py-2 bg-slate-800/50 hover:bg-slate-800 rounded-xl font-semibold text-xs text-slate-400 transition">Cancel</button>
         </div>
     </div>
 
-    <!-- Success Modal -->
-    <div id="success-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl text-center">
-            <h2 id="success-title" class="text-3xl font-extrabold text-slate-800 mb-2">Success</h2>
-            <p id="success-employee-name" class="text-xl font-semibold text-indigo-600 mb-6"></p>
-            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-8 text-left space-y-3 text-sm">
-                <div><b>Status:</b> <span id="success-status-badge"></span></div>
-                <div><b>Location:</b> <span id="success-class"></span></div>
-                <div><b>Time:</b> <span id="success-time"></span></div>
-            </div>
-            <button onclick="closeSuccessModal()" class="w-full py-4 bg-indigo-600 rounded-2xl text-lg font-bold text-white">Done</button>
-        </div>
-    </div>
-
+    <!-- JavaScript Logic -->
     <script>
-        let users = [];
         let currentPin = "";
-        let pendingUser = null;
-        let setupUser = null;
+        let users = [];
+        let activeEmployee = null;
 
-        async function loadTerminalData() {
-            users = await (await fetch('/api/employees')).json();
+        async function initTerminal() {
+            const res = await fetch('/api/employees');
+            users = await res.json();
             renderTeamStatus();
+        }
+
+        function pressKey(num) {
+            if (currentPin.length < 4) {
+                currentPin += num;
+                document.getElementById('pin-display').value = currentPin;
+                if (currentPin.length === 4) {
+                    submitPin();
+                }
+            }
+        }
+
+        function clearPin() {
+            currentPin = "";
+            document.getElementById('pin-display').value = "";
+        }
+
+        async function submitPin() {
+            const pin = currentPin;
+            clearPin();
+
+            const emp = users.find(u => u.pin === pin);
+            if (!emp) {
+                alert("Invalid PIN. Please try again.");
+                return;
+            }
+
+            activeEmployee = emp;
+            
+            // Fetch latest punch status
+            const res = await fetch('/api/punches');
+            const punches = await res.json();
+            const activePunch = punches.find(p => p.name === emp.name && !p.clockOut);
+
+            if (activePunch) {
+                // Already clocked in -> Clock out directly
+                if (confirm(`${emp.name}, would you like to clock out?`)) {
+                    await completeClockOut(activePunch);
+                }
+            } else {
+                // Not clocked in -> Show location modal
+                document.getElementById('modal-employee-name').innerText = `Hello, ${emp.name}`;
+                document.getElementById('action-modal').classList.remove('hidden');
+                document.getElementById('action-modal').classList.add('flex');
+            }
+        }
+
+        async function executeClockAction(qbClass) {
+            closeActionModal();
+            const now = new Date().toISOString();
+            
+            const payload = {
+                id: Date.now(),
+                name: activeEmployee.name,
+                qbClass: qbClass,
+                clockIn: now,
+                clockOut: null,
+                hoursDecimal: 0,
+                override: 0,
+                manager: null
+            };
+
+            await fetch('/api/punches/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            alert(`${activeEmployee.name} successfully clocked in at ${qbClass}!`);
+            renderTeamStatus();
+        }
+
+        async function completeClockOut(activePunch) {
+            const clockOutTime = new Date();
+            const clockInTime = new Date(activePunch.clockIn);
+            const diffMs = clockOutTime - clockInTime;
+            const hoursDecimal = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+
+            const payload = {
+                id: activePunch.id,
+                name: activePunch.name,
+                qbClass: activePunch.qbClass,
+                clockIn: activePunch.clockIn,
+                clockOut: clockOutTime.toISOString(),
+                hoursDecimal: hoursDecimal
+            };
+
+            await fetch('/api/punches/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            alert(`${activePunch.name} successfully clocked out. Total hours: ${hoursDecimal}`);
+            renderTeamStatus();
+        }
+
+        function closeActionModal() {
+            document.getElementById('action-modal').classList.remove('flex');
+            document.getElementById('action-modal').classList.add('hidden');
         }
 
         async function renderTeamStatus() {
             const res = await fetch('/api/punches');
             const timeLog = await res.json();
-            const employees = users.filter(u => u.role === "employee" && u.name).sort((a, b) => a.name.localeCompare(b.name));
             
-            document.getElementById('team-status-list').innerHTML = employees.map(emp => {
+            // Only show staff members where showOnClock is not explicitly set to 0 (false)
+            const activeStaff = users.filter(u => u.showOnClock !== 0 && u.name).sort((a, b) => a.name.localeCompare(b.name));
+            
+            document.getElementById('team-status-list').innerHTML = activeStaff.map(emp => {
                 const active = timeLog.find(e => e.name === emp.name && !e.clockOut);
                 return active ? `
-                    <div class="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                        <div><div class="font-bold text-slate-800 text-sm">${emp.name}</div><div class="text-[11px] text-emerald-700">📍 ${active.qbClass}</div></div>
-                        <span class="px-2.5 py-1 bg-emerald-500 text-white font-bold rounded-full text-[11px] animate-pulse">Clocked In</span>
+                    <div class="flex items-center justify-between p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-xl">
+                        <div>
+                            <div class="font-bold text-white text-xs">${emp.name}</div>
+                            <div class="text-[11px] text-emerald-400">📍 ${active.qbClass}</div>
+                        </div>
+                        <span class="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold rounded-full text-[10px] animate-pulse">Clocked In</span>
                     </div>` : `
-                    <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                        <div><div class="font-bold text-slate-700 text-sm">${emp.name}</div><div class="text-[11px] text-slate-400">Offline</div></div>
-                        <span class="px-2.5 py-1 bg-slate-200 text-slate-600 font-semibold rounded-full text-[11px]">Offline</span>
+                    <div class="flex items-center justify-between p-3 bg-slate-950/40 border border-slate-800 rounded-xl">
+                        <div>
+                            <div class="font-bold text-slate-300 text-xs">${emp.name}</div>
+                            <div class="text-[11px] text-slate-500">Offline</div>
+                        </div>
+                        <span class="px-2.5 py-1 bg-slate-800 text-slate-400 font-semibold rounded-full text-[10px]">Offline</span>
                     </div>`;
             }).join('');
         }
 
-        function pressNum(num) { 
-            if (currentPin.length < 4) { 
-                currentPin += num; 
-                document.getElementById('pin-display').value = currentPin; 
-            } 
-        }
-        function clearPin() { 
-            currentPin = ""; 
-            document.getElementById('pin-display').value = ""; 
-        }
-
-        window.addEventListener('keydown', (e) => {
-            const overrideModalOpen = !document.getElementById('override-modal').classList.contains('hidden');
-            const setupModalOpen = !document.getElementById('setup-modal').classList.contains('hidden');
-
-            if (overrideModalOpen || setupModalOpen) {
-                if (e.key === 'Enter') {
-                    if (overrideModalOpen) confirmOverride();
-                    if (setupModalOpen) saveNewPin();
-                }
-                return; 
-            }
-
-            if (e.key >= '0' && e.key <= '9') {
-                pressNum(e.key);
-            } else if (e.key === 'Backspace') {
-                currentPin = currentPin.slice(0, -1);
-                document.getElementById('pin-display').value = currentPin;
-            } else if (e.key === 'Enter') {
-                submitPin();
-            }
-        });
-
-        async function submitPin() {
-            await loadTerminalData();
-            const user = users.find(u => u.pin === currentPin);
-            if (!user) { alert("Invalid PIN."); clearPin(); return; }
-            if (user.needsPinSetup) {
-                setupUser = user;
-                document.getElementById('setup-employee-name').innerText = user.name;
-                document.getElementById('new-pin-input').value = "";
-                document.getElementById('setup-modal').classList.remove('hidden');
-                setTimeout(() => document.getElementById('new-pin-input').focus(), 100);
-                clearPin();
-                return;
-            }
-            processClockAction(user);
-        }
-
-        async function saveNewPin() {
-            const pin = document.getElementById('new-pin-input').value;
-            if (pin.length !== 4) { alert("Enter a 4-digit PIN."); return; }
-            const res = await fetch('/api/employees/update-pin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: setupUser.id, pin }) });
-            if ((await res.json()).success) {
-                document.getElementById('setup-modal').classList.add('hidden');
-                await loadTerminalData();
-                processClockAction(users.find(u => u.id === setupUser.id));
-                setupUser = null;
-            }
-        }
-
-        function processClockAction(user) {
-            const now = new Date();
-            const currentTimeStr = now.toTimeString().substring(0, 5);
-            
-            const dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-            const todayKey = dayKeys[now.getDay()];
-            
-            const allowedStart = user[`${todayKey}Start`] || '08:00';
-            const allowedEnd = user[`${todayKey}End`] || '17:00';
-            const isOutsideWindow = currentTimeStr < allowedStart || currentTimeStr > allowedEnd;
-
-            const qbClass = document.getElementById('qb-class-select').value;
-            if (isOutsideWindow) {
-                pendingUser = user;
-                document.getElementById('manager-pin-input').value = "";
-                document.getElementById('override-modal').classList.remove('hidden');
-                setTimeout(() => document.getElementById('manager-pin-input').focus(), 100);
-            } else {
-                handlePunchFlow(user, qbClass, false);
-            }
-            clearPin();
-        }
-
-        function closeOverrideModal() { document.getElementById('override-modal').classList.add('hidden'); pendingUser = null; document.getElementById('manager-pin-input').value = ""; }
-        
-        async function confirmOverride() {
-            const mPin = document.getElementById('manager-pin-input').value;
-            const manager = users.find(u => u.pin === mPin && u.role === "manager");
-            if (!manager) { alert("Invalid Manager PIN!"); return; }
-            await handlePunchFlow(pendingUser, document.getElementById('qb-class-select').value, true, manager.name);
-            closeOverrideModal();
-        }
-
-        async function handlePunchFlow(user, qbClass, overrideStatus, managerName = "") {
-            const res = await fetch('/api/punches');
-            let timeLog = await res.json();
-            let active = timeLog.find(e => e.name === user.name && !e.clockOut);
-
-            if (active) {
-                active.clockOut = new Date().toISOString();
-                active.hoursDecimal = parseFloat(((new Date(active.clockOut) - new Date(active.clockIn)) / (1000 * 60 * 60)).toFixed(2));
-                
-                await fetch('/api/punches/save', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(active)
-                });
-                showSuccess(user.name, qbClass, active.clockOut, false);
-            } else {
-                const newEntry = { id: Date.now(), name: user.name, qbClass, clockIn: new Date().toISOString(), clockOut: null, hoursDecimal: 0, override: overrideStatus, manager: managerName };
-                
-                await fetch('/api/punches/save', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newEntry)
-                });
-                showSuccess(user.name, qbClass, newEntry.clockIn, true);
-            }
-            renderTeamStatus();
-        }
-
-        function showSuccess(name, qbClass, timeStr, isClockIn) {
-            document.getElementById('success-employee-name').innerText = name;
-            document.getElementById('success-class').innerText = qbClass;
-            document.getElementById('success-time').innerText = new Date(timeStr).toLocaleString();
-            document.getElementById('success-title').innerText = isClockIn ? "Clocked In Successfully" : "Clocked Out Successfully";
-            document.getElementById('success-status-badge').innerText = isClockIn ? "Clocked In" : "Clocked Out";
-            document.getElementById('success-modal').classList.remove('hidden');
-        }
-
-        function closeSuccessModal() { document.getElementById('success-modal').classList.add('hidden'); clearPin(); }
-
-        loadTerminalData();
+        initTerminal();
     </script>
 </body>
 </html>

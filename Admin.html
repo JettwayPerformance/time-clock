@@ -3,210 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Payroll & Management</title>
+    <title>Admin Dashboard - Time Clock</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 font-sans min-h-screen p-6 text-slate-100 flex flex-col items-center">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
 
-    <div class="max-w-5xl w-full">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-slate-800 pb-4 gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-white">🔒 Administrator Payroll Back End</h1>
-                <p class="text-sm text-slate-400">Pay rates, pay period management, manual entries, edits, and weekly schedule controls</p>
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-3">
+            <span class="text-xl">⚙️</span>
+            <h1 class="font-bold text-lg text-white">Admin Dashboard</h1>
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="/" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition">🕒 Go to Time Clock</a>
+            <button onclick="wipeDataModal()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-semibold transition">⚠️ Wipe Punches Data</button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+
+        <!-- Staff Management Section -->
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-base font-bold text-white">Staff & Manager Directory</h3>
+                    <p class="text-xs text-slate-400">Manage PINs, pay rates, roles, clock visibility, and weekly schedules.</p>
+                </div>
+                <button onclick="openStaffModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-semibold text-white transition shadow-lg shadow-indigo-600/20">Manage Staff</button>
+            </div>
+        </section>
+
+        <!-- Time Punches Overview Section -->
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-base font-bold text-white">Recorded Time Punches</h3>
+                <span id="punch-count" class="text-xs bg-slate-800 px-3 py-1 rounded-full text-slate-400 font-mono">0 records</span>
             </div>
             
-            <div class="flex flex-wrap items-center gap-3">
-                <div>
-                    <label class="block text-[10px] uppercase font-semibold text-slate-400 mb-1">Filter Employee</label>
-                    <select id="employee-filter" onchange="renderDashboard()" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="ALL">All Employees</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-[10px] uppercase font-semibold text-slate-400 mb-1">Select Pay Period</label>
-                    <select id="pay-period-select" onchange="renderDashboard()" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
-                </div>
-
-                <button onclick="openManualModal()" class="mt-4 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold text-xs transition shadow-lg">+ Manual Entry</button>
-                <button onclick="openStaffModal()" class="mt-4 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-xs transition shadow-lg">👥 Manage Staff & Schedules</button>
-                <button onclick="clearHistory()" class="mt-4 px-3 py-2.5 bg-rose-600/25 hover:bg-rose-600/35 text-rose-400 border border-rose-800 rounded-xl font-semibold text-xs transition">Wipe Data</button>
-            </div>
-        </div>
-
-        <div class="mb-8">
-            <h2 id="summary-title" class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">QuickBooks Class Hours & Payroll Breakdown</h2>
-            <div id="class-summary-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
-        </div>
-
-        <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
-            <div class="p-4 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center text-sm">
-                <span id="log-count" class="font-semibold text-slate-300">Punches in view: 0</span>
-                <span class="text-xs text-slate-400">Manage, edit or create manual entries below</span>
-            </div>
-            <table class="w-full text-left border-collapse text-sm">
-                <thead>
-                    <tr class="bg-slate-700/50 text-slate-400 uppercase tracking-wider text-xs border-b border-slate-700">
-                        <th class="p-4 font-semibold">Employee</th>
-                        <th class="p-4 font-semibold">QB Class (Location)</th>
-                        <th class="p-4 font-semibold">Punch Window</th>
-                        <th class="p-4 font-semibold text-right">Hours & Gross Pay</th>
-                        <th class="p-4 font-semibold text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="admin-table-body" class="divide-y divide-slate-700/50 text-slate-300"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Staff Management Modal -->
-    <div id="staff-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-2xl w-full shadow-2xl text-slate-100 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-white">Manage Employees, PINs, Pay Rates & Schedules</h3>
-                <button onclick="closeStaffModal()" class="text-slate-400 hover:text-white text-sm font-bold">✕ Close</button>
-            </div>
-
-            <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700 mb-6 space-y-3">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Add New Employee</h4>
-                <div class="grid grid-cols-3 gap-2">
-                    <input type="text" id="new-emp-name" placeholder="Full Name" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200">
-                    <input type="text" id="new-emp-pin" maxlength="4" placeholder="Temp 4-Digit PIN" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200">
-                    <input type="number" step="0.01" id="new-emp-rate" placeholder="Pay Rate ($/hr)" value="20.00" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200">
-                </div>
-                <button onclick="addNewEmployee()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold text-xs text-white">Add Employee</button>
-            </div>
-
-            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Staff List, Pay Rates & Schedule Management</h4>
-            <div class="border border-slate-700 rounded-xl divide-y divide-slate-700/50">
+            <div class="overflow-x-auto rounded-xl border border-slate-800">
                 <table class="w-full text-left text-xs">
-                    <tbody id="staff-table-body"></tbody>
+                    <thead class="bg-slate-800/60 text-slate-400 uppercase tracking-wider font-mono">
+                        <tr>
+                            <th class="p-3">Employee</th>
+                            <th class="p-3">Location</th>
+                            <th class="p-3">Clock In</th>
+                            <th class="p-3">Clock Out</th>
+                            <th class="p-3">Hours</th>
+                            <th class="p-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="punches-table-body" class="divide-y divide-slate-800">
+                        <!-- Dynamic Punches Loaded Here -->
+                    </tbody>
                 </table>
             </div>
+        </section>
+
+    </main>
+
+    <!-- Staff Management Modal -->
+    <div id="staff-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                <h3 class="font-bold text-sm text-white">Staff & Manager Directory</h3>
+                <button onclick="closeStaffModal()" class="text-slate-400 hover:text-white text-base">✕</button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6 flex-1">
+                
+                <!-- Add New Staff Form -->
+                <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800 space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Add New Staff / Manager</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <input type="text" id="new-emp-name" placeholder="Full Name" class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200">
+                        <input type="text" id="new-emp-pin" maxlength="4" placeholder="Temp 4-Digit PIN" class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 font-mono">
+                        <input type="number" step="0.01" id="new-emp-rate" placeholder="Pay Rate ($/hr)" value="20.00" class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 font-mono">
+                        <select id="new-emp-role" class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200">
+                            <option value="employee">Role: Employee</option>
+                            <option value="manager">Role: Manager</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2 text-xs text-slate-300 pt-1">
+                        <input type="checkbox" id="new-emp-show" checked class="w-4 h-4 accent-indigo-600 rounded">
+                        <label for="new-emp-show">Show on Time Clock terminal & live status</label>
+                    </div>
+                    <button onclick="addNewEmployee()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold text-xs text-white transition">Add Staff Member</button>
+                </div>
+
+                <!-- Existing Staff Table -->
+                <div class="overflow-x-auto rounded-xl border border-slate-800">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-950 text-slate-400 uppercase tracking-wider font-mono">
+                            <tr>
+                                <th class="p-3">Name & Role</th>
+                                <th class="p-3">PIN</th>
+                                <th class="p-3">Pay Rate</th>
+                                <th class="p-3">Clock Visibility</th>
+                                <th class="p-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staff-table-body" class="divide-y divide-slate-800">
+                            <!-- Dynamic Staff Loaded Here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Schedule Editor Modal -->
-    <div id="schedule-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl text-slate-100">
-            <h3 id="sched-modal-title" class="text-lg font-bold mb-4 text-white">Edit Schedule</h3>
-            <input type="hidden" id="sched-emp-id">
-            
-            <div class="space-y-2 text-xs max-h-72 overflow-y-auto pr-2">
-                <div class="grid grid-cols-3 gap-2 items-center"><span class="font-bold">Monday:</span><input type="time" id="monStart" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"><input type="time" id="monEnd" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"></div>
-                <div class="grid grid-cols-3 gap-2 items-center"><span class="font-bold">Tuesday:</span><input type="time" id="tueStart" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"><input type="time" id="tueEnd" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"></div>
-                <div class="grid grid-cols-3 gap-2 items-center"><span class="font-bold">Wednesday:</span><input type="time" id="wedStart" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"><input type="time" id="wedEnd" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"></div>
-                <div class="grid grid-cols-3 gap-2 items-center"><span class="font-bold">Thursday:</span><input type="time" id="thuStart" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"><input type="time" id="thuEnd" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"></div>
-                <div class="grid grid-cols-3 gap-2 items-center"><span class="font-bold">Friday:</span><input type="time" id="friStart" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"><input type="time" id="friEnd" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"></div>
-                <div class="grid grid-cols-3 gap-2 items-center"><span class="font-bold">Saturday:</span><input type="time" id="satStart" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"><input type="time" id="satEnd" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"></div>
-                <div class="grid grid-cols-3 gap-2 items-center"><span class="font-bold">Sunday:</span><input type="time" id="sunStart" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"><input type="time" id="sunEnd" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-white"></div>
+    <!-- Schedule Settings Modal -->
+    <div id="schedule-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 id="schedule-modal-title" class="font-bold text-sm text-white">Edit Schedule</h3>
+                <button onclick="closeScheduleModal()" class="text-slate-400 hover:text-white">✕</button>
             </div>
-
-            <div class="flex space-x-3 mt-6">
-                <button onclick="closeScheduleModal()" class="flex-1 py-2.5 bg-slate-700 rounded-xl font-semibold text-slate-300">Cancel</button>
-                <button onclick="saveSchedule()" class="flex-1 py-2.5 bg-indigo-600 rounded-xl font-semibold text-white">Save Schedule</button>
+            <input type="hidden" id="sch-emp-id">
+            <div id="schedule-days-container" class="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
+                <!-- Dynamic Days Loaded Here -->
             </div>
+            <button onclick="saveSchedule()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-xs text-white transition">Save Schedule</button>
         </div>
     </div>
 
-    <!-- Manual Entry / Edit Modal -->
-    <div id="entry-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl text-slate-100">
-            <h3 id="modal-title" class="text-lg font-bold mb-4 text-white">Create Manual Timesheet Entry</h3>
-            <input type="hidden" id="edit-entry-id">
-            <div class="space-y-4 text-xs">
-                <div><label class="block font-semibold text-slate-400 mb-1">Employee Name</label><select id="modal-employee" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200"></select></div>
-                <div><label class="block font-semibold text-slate-400 mb-1">QuickBooks Class</label><select id="modal-class" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200"><option value="Bryant">Bryant</option><option value="Cabot">Cabot</option><option value="Maumelle">Maumelle</option></select></div>
-                <div><label class="block font-semibold text-slate-400 mb-1">Clock In</label><input type="datetime-local" id="modal-clockin" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200"></div>
-                <div><label class="block font-semibold text-slate-400 mb-1">Clock Out</label><input type="datetime-local" id="modal-clockout" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200"></div>
-            </div>
-            <div class="flex space-x-3 mt-6">
-                <button onclick="closeModal()" class="flex-1 py-3 bg-slate-700 rounded-xl font-semibold">Cancel</button>
-                <button onclick="saveModalEntry()" class="flex-1 py-3 bg-indigo-600 rounded-xl font-semibold">Save Entry</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- JavaScript Logic -->
     <script>
-        const ANCHOR_START = new Date(2026, 9, 5);
-        const PERIOD_DAYS = 14;
         let employeesCache = [];
+
+        async function initAdmin() {
+            await fetchEmployees();
+            await fetchPunches();
+        }
 
         async function fetchEmployees() {
             const res = await fetch('/api/employees');
             employeesCache = await res.json();
-            employeesCache.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-            updateEmployeeDropdowns();
         }
 
-        function updateEmployeeDropdowns() {
-            const activeEmps = employeesCache.filter(u => u.role === 'employee' && u.name).map(u => u.name);
-            const filterSelect = document.getElementById('employee-filter');
-            const currentFilter = filterSelect.value;
-            filterSelect.innerHTML = `<option value="ALL">All Employees</option>` + activeEmps.map(emp => `<option value="${emp}">${emp}</option>`).join('');
-            if (activeEmps.includes(currentFilter) || currentFilter === "ALL") filterSelect.value = currentFilter;
-            document.getElementById('modal-employee').innerHTML = activeEmps.map(emp => `<option value="${emp}">${emp}</option>`).join('');
+        async function fetchPunches() {
+            const res = await fetch('/api/punches');
+            const punches = await res.json();
+            document.getElementById('punch-count').innerText = `${punches.length} records`;
+            
+            document.getElementById('punches-table-body').innerHTML = punches.map(p => `
+                <tr class="hover:bg-slate-800/40 transition">
+                    <td class="p-3 font-medium text-white">${p.name}</td>
+                    <td class="p-3 text-slate-400">${p.qbClass || 'N/A'}</td>
+                    <td class="p-3 text-slate-300 font-mono">${p.clockIn ? new Date(p.clockIn).toLocaleString() : '-'}</td>
+                    <td class="p-3 text-slate-300 font-mono">${p.clockOut ? new Date(p.clockOut).toLocaleString() : '<span class="text-emerald-400 animate-pulse font-bold">Active</span>'}</td>
+                    <td class="p-3 text-indigo-300 font-mono font-bold">${p.hoursDecimal ? p.hoursDecimal + ' hrs' : '-'}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="deletePunch(${p.id})" class="px-2 py-1 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 rounded text-[10px] font-semibold transition">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
         }
 
         async function openStaffModal() {
             await fetchEmployees();
             document.getElementById('staff-table-body').innerHTML = employeesCache.map(emp => `
-                <tr class="border-b border-slate-700/50">
-                    <td class="p-3 font-medium text-white">${emp.name}</td>
-                    <td class="p-3 text-indigo-400 font-mono">PIN: ${emp.pin}</td>
+                <tr class="hover:bg-slate-800/40 transition">
+                    <td class="p-3 font-medium text-white">
+                        ${emp.name} 
+                        <span class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${emp.role === 'manager' ? 'bg-indigo-600/30 text-indigo-300' : 'bg-slate-800 text-slate-400'}">${emp.role || 'employee'}</span>
+                    </td>
+                    <td class="p-3 text-slate-400 font-mono">${emp.pin}</td>
                     <td class="p-3">
                         <div class="flex items-center space-x-1">
-                            <span class="text-slate-400">$</span>
-                            <input type="number" step="0.01" id="rate-${emp.id}" value="${emp.payRate || 20.00}" onchange="updatePayRate(${emp.id})" class="w-20 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-center">
-                            <span class="text-slate-400 text-[10px]">/hr</span>
+                            <span class="text-slate-500">$</span>
+                            <input type="number" step="0.01" id="rate-${emp.id}" value="${emp.payRate || 20.00}" onchange="updatePayRate(${emp.id})" class="w-20 bg-slate-950 border border-slate-800 rounded p-1 text-white font-mono text-center">
+                            <span class="text-slate-500 text-[10px]">/hr</span>
                         </div>
                     </td>
+                    <td class="p-3">
+                        <label class="flex items-center space-x-1.5 text-[11px] text-slate-300 cursor-pointer">
+                            <input type="checkbox" ${emp.showOnClock !== 0 ? 'checked' : ''} onchange="toggleClockStatus(${emp.id}, this.checked)" class="accent-indigo-600 w-3.5 h-3.5 rounded">
+                            <span>Show on Clock</span>
+                        </label>
+                    </td>
                     <td class="p-3 text-right space-x-1">
-                        <button onclick="openScheduleModal(${emp.id})" class="px-2 py-1 bg-indigo-600/30 text-indigo-300 rounded text-[10px] font-semibold">Schedule</button>
-                        <button onclick="resetPin(${emp.id})" class="px-2 py-1 bg-amber-600/20 text-amber-400 rounded text-[10px] font-semibold">Reset PIN</button>
-                        ${emp.role !== 'manager' ? `<button onclick="deleteEmployee(${emp.id})" class="px-2 py-1 bg-rose-600/20 text-rose-400 rounded text-[10px] font-semibold">Delete</button>` : ''}
+                        <button onclick="openScheduleModal(${emp.id})" class="px-2 py-1 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 rounded text-[10px] font-semibold transition">Schedule</button>
+                        <button onclick="resetPin(${emp.id})" class="px-2 py-1 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 rounded text-[10px] font-semibold transition">Reset PIN</button>
+                        <button onclick="deleteEmployee(${emp.id})" class="px-2 py-1 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 rounded text-[10px] font-semibold transition">Delete</button>
                     </td>
                 </tr>
             `).join('');
             document.getElementById('staff-modal').classList.remove('hidden');
+            document.getElementById('staff-modal').classList.add('flex');
         }
 
-        function closeStaffModal() { document.getElementById('staff-modal').classList.add('hidden'); renderDashboard(); }
+        function closeStaffModal() {
+            document.getElementById('staff-modal').classList.remove('flex');
+            document.getElementById('staff-modal').classList.add('hidden');
+        }
+
+        async function addNewEmployee() {
+            const name = document.getElementById('new-emp-name').value.trim();
+            const pin = document.getElementById('new-emp-pin').value.trim();
+            const payRate = parseFloat(document.getElementById('new-emp-rate').value) || 20.00;
+            const role = document.getElementById('new-emp-role').value;
+            const showOnClock = document.getElementById('new-emp-show').checked;
+
+            if (!name || pin.length !== 4) { alert("Please enter a valid name and a 4-digit PIN."); return; }
+            
+            const res = await fetch('/api/employees/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, pin, payRate, role, showOnClock })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('new-emp-name').value = "";
+                document.getElementById('new-emp-pin').value = "";
+                openStaffModal();
+            } else {
+                alert(data.error || "Error adding employee.");
+            }
+        }
 
         async function updatePayRate(id) {
-            const newRate = document.getElementById(`rate-${id}`).value;
+            const payRate = parseFloat(document.getElementById(`rate-${id}`).value) || 20.00;
             await fetch('/api/employees/rate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, payRate: parseFloat(newRate) || 0 })
+                body: JSON.stringify({ id, payRate })
             });
-            await fetchEmployees();
-            renderDashboard();
+        }
+
+        async function toggleClockStatus(id, showOnClock) {
+            await fetch('/api/employees/toggle-clock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, showOnClock })
+            });
+        }
+
+        async function resetPin(id) {
+            const newPin = prompt("Enter a new 4-digit PIN for this employee:");
+            if (!newPin || newPin.length !== 4) return;
+            const res = await fetch('/api/employees/reset-pin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, newPin })
+            });
+            if ((await res.json()).success) alert("PIN reset successfully!");
+        }
+
+        async function deleteEmployee(id) {
+            if (!confirm("Are you sure you want to delete this staff member?")) return;
+            await fetch('/api/employees/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            openStaffModal();
         }
 
         function openScheduleModal(id) {
             const emp = employeesCache.find(e => e.id === id);
             if (!emp) return;
-            document.getElementById('sched-modal-title').innerText = `Edit Schedule: ${emp.name}`;
-            document.getElementById('sched-emp-id').value = emp.id;
+            document.getElementById('sch-emp-id').value = emp.id;
+            document.getElementById('schedule-modal-title').innerText = `Edit Schedule: ${emp.name}`;
             
-            const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-            days.forEach(d => {
-                document.getElementById(`${d}Start`).value = emp[`${d}Start`] || '08:00';
-                document.getElementById(`${d}End`).value = emp[`${d}End`] || '17:00';
-            });
+            const days = [
+                { key: 'mon', label: 'Monday' },
+                { key: 'tue', label: 'Tuesday' },
+                { key: 'wed', label: 'Wednesday' },
+                { key: 'thu', label: 'Thursday' },
+                { key: 'fri', label: 'Friday' },
+                { key: 'sat', label: 'Saturday' },
+                { key: 'sun', label: 'Sunday' }
+            ];
+
+            document.getElementById('schedule-days-container').innerHTML = days.map(d => `
+                <div class="flex items-center justify-between bg-slate-950/50 p-2.5 rounded-xl border border-slate-800">
+                    <span class="text-xs font-semibold text-slate-300 w-24">${d.label}</span>
+                    <div class="flex items-center space-x-2">
+                        <input type="time" id="${d.key}-start" value="${emp[d.key + 'Start'] || '08:00'}" class="bg-slate-900 border border-slate-800 rounded p-1 text-xs text-white font-mono">
+                        <span class="text-slate-500">to</span>
+                        <input type="time" id="${d.key}-end" value="${emp[d.key + 'End'] || '17:00'}" class="bg-slate-900 border border-slate-800 rounded p-1 text-xs text-white font-mono">
+                    </div>
+                </div>
+            `).join('');
+
             document.getElementById('schedule-modal').classList.remove('hidden');
+            document.getElementById('schedule-modal').classList.add('flex');
         }
 
-        function closeScheduleModal() { document.getElementById('schedule-modal').classList.add('hidden'); }
+        function closeScheduleModal() {
+            document.getElementById('schedule-modal').classList.remove('flex');
+            document.getElementById('schedule-modal').classList.add('hidden');
+        }
 
         async function saveSchedule() {
-            const id = document.getElementById('sched-emp-id').value;
+            const id = document.getElementById('sch-emp-id').value;
             const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
             const payload = { id };
             days.forEach(d => {
-                payload[`${d}Start`] = document.getElementById(`${d}Start`).value;
-                payload[`${d}End`] = document.getElementById(`${d}End`).value;
+                payload[d + 'Start'] = document.getElementById(`${d}-start`).value;
+                payload[d + 'End'] = document.getElementById(`${d}-end`).value;
             });
 
             const res = await fetch('/api/employees/schedule', {
@@ -215,210 +310,32 @@
                 body: JSON.stringify(payload)
             });
             if ((await res.json()).success) {
-                alert("Schedule updated successfully!");
                 closeScheduleModal();
-                openStaffModal();
+                fetchEmployees();
+                alert("Schedule updated successfully!");
             }
         }
 
-        async function addNewEmployee() {
-            const name = document.getElementById('new-emp-name').value.trim();
-            const pin = document.getElementById('new-emp-pin').value.trim();
-            const payRate = parseFloat(document.getElementById('new-emp-rate').value) || 20.00;
-            if (!name || pin.length !== 4) { alert("Enter valid name and 4-digit PIN."); return; }
-            const res = await fetch('/api/employees/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, pin, payRate }) });
-            if ((await res.json()).success) { 
-                document.getElementById('new-emp-name').value = ""; 
-                document.getElementById('new-emp-pin').value = ""; 
-                openStaffModal(); 
-            } else { alert("PIN already in use."); }
-        }
-
-        async function resetPin(id) {
-            const newPin = prompt("Enter temporary 4-digit PIN:");
-            if (!newPin || newPin.length !== 4) return;
-            const res = await fetch('/api/employees/reset-pin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, newPin }) });
-            if ((await res.json()).success) { alert("PIN reset!"); openStaffModal(); }
-        }
-
-        async function deleteEmployee(id) {
-            if (confirm("Delete employee?")) {
-                await fetch('/api/employees/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-                openStaffModal();
-            }
-        }
-
-        function generatePayPeriods() {
-            const select = document.getElementById('pay-period-select');
-            if (select.children.length > 0) return;
-            
-            let periodStart = new Date(ANCHOR_START.getTime());
-            for (let i = 0; i < 15; i++) {
-                let periodEnd = new Date(periodStart.getTime());
-                periodEnd.setDate(periodStart.getDate() + PERIOD_DAYS - 1);
-                select.innerHTML += `<option value="${periodStart.toISOString()}_${periodEnd.toISOString()}">${periodStart.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})} - ${periodEnd.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})}</option>`;
-                periodStart.setDate(periodStart.getDate() + PERIOD_DAYS);
-            }
-        }
-
-        async function renderDashboard() {
-            generatePayPeriods();
-            await fetchEmployees();
-            
-            const punchRes = await fetch('/api/punches');
-            const timeLog = await punchRes.json();
-
-            const selectedVal = document.getElementById('pay-period-select').value;
-            const selectedEmployee = document.getElementById('employee-filter').value;
-            if (!selectedVal) return;
-            const [startIso, endIso] = selectedVal.split('_');
-            const periodStart = new Date(startIso), periodEnd = new Date(endIso);
-            periodEnd.setHours(23, 59, 59, 999);
-
-            let filteredLogs = timeLog.filter(e => new Date(e.clockIn) >= periodStart && new Date(e.clockIn) <= periodEnd);
-            if (selectedEmployee !== "ALL") filteredLogs = filteredLogs.filter(e => e.name === selectedEmployee);
-
-            document.getElementById('log-count').innerText = `Punches in view: ${filteredLogs.length}`;
-            
-            const classTotals = {};
-            const classPayTotals = {};
-
-            filteredLogs.forEach(e => {
-                const empObj = employeesCache.find(u => u.name === e.name);
-                const rate = empObj ? (empObj.payRate || 20.00) : 20.00;
-                const hrs = e.hoursDecimal || 0;
-                const pay = hrs * rate;
-
-                const cls = e.qbClass || "Unassigned";
-                classTotals[cls] = (classTotals[cls] || 0) + hrs;
-                classPayTotals[cls] = (classPayTotals[cls] || 0) + pay;
-            });
-
-            const summaryGrid = document.getElementById('class-summary-grid');
-            const classesList = Object.keys(classTotals);
-            summaryGrid.innerHTML = classesList.length === 0 ? `<div class="col-span-3 p-4 bg-slate-800 border border-slate-700 rounded-xl text-center text-slate-500 text-xs">No hours recorded.</div>` :
-                classesList.map(cls => `
-                    <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-md">
-                        <div class="text-xs font-semibold text-slate-400 uppercase">QB Class: ${cls}</div>
-                        <div class="text-2xl font-extrabold text-indigo-400 mt-1">${classTotals[cls].toFixed(2)} hrs</div>
-                        <div class="text-sm font-bold text-emerald-400 mt-0.5">$${classPayTotals[cls].toFixed(2)}</div>
-                    </div>
-                `).join('');
-
-            document.getElementById('admin-table-body').innerHTML = filteredLogs.length === 0 ? `<tr><td colspan="5" class="p-8 text-center text-slate-500">No time entries found.</td></tr>` :
-                filteredLogs.map(e => {
-                    const empObj = employeesCache.find(u => u.name === e.name);
-                    const rate = empObj ? (empObj.payRate || 20.00) : 20.00;
-                    const hrs = e.hoursDecimal || 0;
-                    const totalPay = hrs * rate;
-                    return `
-                        <tr class="hover:bg-slate-700/30">
-                            <td class="p-4 font-medium text-white">${e.name}</td>
-                            <td class="p-4 text-slate-400">🏷️ ${e.qbClass}</td>
-                            <td class="p-4 text-xs">In: ${new Date(e.clockIn).toLocaleString()}<br>Out: ${e.clockOut ? new Date(e.clockOut).toLocaleString() : 'Active'}</td>
-                            <td class="p-4 text-right font-mono">
-                                <div class="font-bold text-emerald-400">${hrs} hrs</div>
-                                <div class="text-xs text-indigo-300 font-semibold">$${totalPay.toFixed(2)} <span class="text-[10px] text-slate-500">($${rate.toFixed(2)}/hr)</span></div>
-                            </td>
-                            <td class="p-4 text-center space-x-2">
-                                <button onclick="editEntry(${e.id})" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold text-indigo-300">Edit</button>
-                                <button onclick="deleteEntry(${e.id})" class="px-2.5 py-1 bg-rose-600/20 hover:bg-rose-600/30 rounded-lg text-xs font-semibold text-rose-400">Delete</button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-        }
-
-        function openManualModal() {
-            document.getElementById('modal-title').innerText = "Create Manual Timesheet Entry";
-            document.getElementById('edit-entry-id').value = "";
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('modal-clockin').value = now.toISOString().slice(0, 16);
-            document.getElementById('modal-clockout').value = "";
-            document.getElementById('entry-modal').classList.remove('hidden');
-        }
-
-        async function editEntry(id) {
-            const punchRes = await fetch('/api/punches');
-            const timeLog = await punchRes.json();
-            const entry = timeLog.find(e => e.id == id);
-            if (!entry) return;
-
-            document.getElementById('modal-title').innerText = "Edit Timesheet Entry";
-            document.getElementById('edit-entry-id').value = entry.id;
-            document.getElementById('modal-employee').value = entry.name;
-            document.getElementById('modal-class').value = entry.qbClass || "Bryant";
-            
-            if (entry.clockIn) {
-                const inDate = new Date(entry.clockIn);
-                inDate.setMinutes(inDate.getMinutes() - inDate.getTimezoneOffset());
-                document.getElementById('modal-clockin').value = inDate.toISOString().slice(0, 16);
-            }
-            if (entry.clockOut) {
-                const outDate = new Date(entry.clockOut);
-                outDate.setMinutes(outDate.getMinutes() - outDate.getTimezoneOffset());
-                document.getElementById('modal-clockout').value = outDate.toISOString().slice(0, 16);
-            } else {
-                document.getElementById('modal-clockout').value = "";
-            }
-            document.getElementById('entry-modal').classList.remove('hidden');
-        }
-
-        function closeModal() { document.getElementById('entry-modal').classList.add('hidden'); }
-
-        async function saveModalEntry() {
-            const editId = document.getElementById('edit-entry-id').value;
-            const empName = document.getElementById('modal-employee').value;
-            const qbClass = document.getElementById('modal-class').value;
-            const clockInVal = document.getElementById('modal-clockin').value;
-            const clockOutVal = document.getElementById('modal-clockout').value;
-            if (!clockInVal) { alert("Clock In required."); return; }
-            
-            const clockInIso = new Date(clockInVal).toISOString();
-            let clockOutIso = clockOutVal ? new Date(clockOutVal).toISOString() : null;
-            let hoursDecimal = clockOutIso ? parseFloat(((new Date(clockOutIso) - new Date(clockInIso)) / (1000 * 60 * 60)).toFixed(2)) : 0;
-            
-            const entryPayload = {
-                id: editId ? parseInt(editId) : Date.now(),
-                name: empName,
-                qbClass,
-                clockIn: clockInIso,
-                clockOut: clockOutIso,
-                hoursDecimal,
-                override: false,
-                manager: "Manual Admin Entry"
-            };
-
-            await fetch('/api/punches/save', {
+        async function deletePunch(id) {
+            if (!confirm("Are you sure you want to delete this punch record?")) return;
+            await fetch('/api/punches/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(entryPayload)
+                body: JSON.stringify({ id })
             });
-
-            closeModal();
-            renderDashboard();
+            fetchPunches();
         }
 
-        async function deleteEntry(id) {
-            if (confirm("Delete entry?")) {
-                await fetch('/api/punches/delete', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id })
-                });
-                renderDashboard();
+        async function wipeDataModal() {
+            if (!confirm("⚠️ WARNING: This will delete ALL recorded time punches. Are you sure?")) return;
+            const res = await fetch('/api/punches/wipe', { method: 'POST' });
+            if ((await res.json()).success) {
+                fetchPunches();
+                alert("All punches wiped successfully.");
             }
         }
 
-        async function clearHistory() { 
-            if (confirm("Wipe all punch data?")) { 
-                await fetch('/api/punches/wipe', { method: 'POST' });
-                renderDashboard(); 
-            } 
-        }
-
-        renderDashboard();
+        initAdmin();
     </script>
 </body>
 </html>
