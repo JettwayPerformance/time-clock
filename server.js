@@ -18,7 +18,7 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
     } else {
         console.log('Connected to the SQLite database.');
         
-        // Employees Table with role, showOnClock, and pay rate
+        // Employees Table
         db.run(`CREATE TABLE IF NOT EXISTS employees (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             pin TEXT UNIQUE,
@@ -35,7 +35,6 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
             satStart TEXT DEFAULT '08:00', satEnd TEXT DEFAULT '17:00',
             sunStart TEXT DEFAULT '08:00', sunEnd TEXT DEFAULT '17:00'
         )`, () => {
-            // Safely add columns if upgrading from an older DB version
             db.run(`ALTER TABLE employees ADD COLUMN showOnClock INTEGER DEFAULT 1`, () => {});
             db.run(`ALTER TABLE employees ADD COLUMN role TEXT DEFAULT 'employee'`, () => {});
             db.run(`ALTER TABLE employees ADD COLUMN payRate REAL DEFAULT 20.00`, () => {});

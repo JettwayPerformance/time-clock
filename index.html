@@ -95,7 +95,6 @@
 
         // Global Keyboard Listener to auto-capture typing for PIN
         window.addEventListener('keydown', (e) => {
-            // Do not capture if user is typing inside modal inputs or dropdowns
             if (document.activeElement.tagName === 'SELECT' || document.getElementById('setup-modal').classList.contains('flex')) {
                 return;
             }
@@ -158,7 +157,7 @@
 
             if (activePunch) {
                 if (confirm(`${emp.name}, would you like to clock out?`)) {
-                    await completeClockOut(activePunch);
+                    await completeClockOut(activePunch, emp.name);
                 }
             } else {
                 await executeClockIn(emp, selectedLocation);
@@ -212,7 +211,7 @@
             renderTeamStatus();
         }
 
-        async function completeClockOut(activePunch) {
+        async function completeClockOut(activePunch, empName) {
             const clockOutTime = new Date();
             const clockInTime = new Date(activePunch.clockIn);
             const diffMs = clockOutTime - clockInTime;
@@ -233,7 +232,7 @@
                 body: JSON.stringify(payload)
             });
 
-            alert(`${activePunch.name} successfully clocked out. Total hours: ${hoursDecimal}`);
+            alert(`${empName} successfully clocked out. Total hours: ${hoursDecimal}`);
             renderTeamStatus();
         }
 
@@ -241,7 +240,6 @@
             const res = await fetch('/api/punches');
             const timeLog = await res.json();
             
-            // Only render staff where showOnClock is enabled (1)
             const activeStaff = users.filter(u => u.name && u.showOnClock === 1).sort((a, b) => a.name.localeCompare(b.name));
             
             document.getElementById('team-status-list').innerHTML = activeStaff.map(emp => {
