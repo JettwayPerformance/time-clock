@@ -66,7 +66,7 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
             });
         });
 
-        // Punches Table
+        // Punches Table with strict error logging
         db.run(`CREATE TABLE IF NOT EXISTS punches (
             id INTEGER PRIMARY KEY,
             name TEXT,
@@ -76,7 +76,9 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
             hoursDecimal REAL,
             override INTEGER,
             manager TEXT
-        )`, () => {});
+        )`, (err) => {
+            if (err) console.error('Error creating punches table:', err);
+        });
     }
 });
 
@@ -149,7 +151,10 @@ app.post('/api/employees/delete', requireAuth, (req, res) => {
 // Time Punch API Endpoints
 app.get('/api/punches', (req, res) => {
     db.all(`SELECT * FROM punches ORDER BY clockIn DESC`, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) {
+            console.error('Error fetching punches:', err.message);
+            return res.status(500).json({ error: err.message });
+        }
         res.json(rows);
     });
 });
@@ -160,13 +165,19 @@ app.post('/api/punches/save', (req, res) => {
         if (row) {
             db.run(`UPDATE punches SET clockOut = ?, hoursDecimal = ? WHERE id = ?`,
                 [clockOut, hoursDecimal, id], function(err) {
-                    if (err) return res.status(400).json({ error: err.message });
+                    if (err) {
+                        console.error('Error updating punch:', err.message);
+                        return res.status(400).json({ error: err.message });
+                    }
                     res.json({ success: true });
                 });
         } else {
             db.run(`INSERT INTO punches (id, name, qbClass, clockIn, clockOut, hoursDecimal, override, manager) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                 [id, name, qbClass, clockIn, clockOut, hoursDecimal, override ? 1 : 0, manager], function(err) {
-                    if (err) return res.status(400).json({ error: err.message });
+                    if (err) {
+                        console.error('Error inserting punch:', err.message);
+                        return res.status(400).json({ error: err.message });
+                    }
                     res.json({ success: true });
                 });
         }
