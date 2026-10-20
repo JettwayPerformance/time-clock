@@ -63,7 +63,7 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
             });
         });
 
-        // Punches Table (Global Database Sync Across Computers)
+        // Punches Table
         db.run(`CREATE TABLE IF NOT EXISTS punches (
             id INTEGER PRIMARY KEY,
             name TEXT,
@@ -135,7 +135,7 @@ app.post('/api/employees/delete', requireAuth, (req, res) => {
     });
 });
 
-// Time Punch API Endpoints (Database-backed for multi-computer sync)
+// Time Punch API Endpoints
 app.get('/api/punches', (req, res) => {
     db.all(`SELECT * FROM punches ORDER BY clockIn DESC`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });

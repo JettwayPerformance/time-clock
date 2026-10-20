@@ -36,9 +36,17 @@
 
         <!-- Time Punches Overview Section -->
         <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-            <div class="flex justify-between items-center">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h3 class="text-base font-bold text-white">Recorded Time Punches</h3>
-                <span id="punch-count" class="text-xs bg-slate-800 px-3 py-1 rounded-full text-slate-400 font-mono">0 records</span>
+                
+                <!-- Pay Period Filter -->
+                <div class="flex items-center space-x-2 bg-slate-950 p-2 rounded-xl border border-slate-800">
+                    <span class="text-xs text-slate-400 font-medium pl-2">Pay Period:</span>
+                    <select id="pay-period-select" onchange="filterPunches()" class="bg-slate-900 border border-slate-800 rounded-lg p-1.5 text-xs text-white">
+                        <option value="all">All Records</option>
+                        <!-- Dynamic Pay Periods populated via JS -->
+                    </select>
+                </div>
             </div>
             
             <div class="overflow-x-auto rounded-xl border border-slate-800">
@@ -120,6 +128,7 @@
     <!-- JavaScript Logic -->
     <script>
         let employeesCache = [];
+        let allPunchesCache = [];
 
         async function initAdmin() {
             await fetchEmployees();
@@ -133,10 +142,51 @@
 
         async function fetchPunches() {
             const res = await fetch('/api/punches');
-            const punches = await res.json();
-            document.getElementById('punch-count').innerText = `${punches.length} records`;
-            
-            document.getElementById('punches-table-body').innerHTML = punches.map(p => `
+            allPunchesCache = await res.json();
+            populatePayPeriods(allPunchesCache);
+            filterPunches();
+        }
+
+        function populatePayPeriods(punches) {
+            const select = document.getElementById('pay-period-select');
+            // Generate bi-weekly ranges based on punches
+            const periods = new Set();
+            punches.forEach(p => {
+                if (!p.clockIn) return;
+                const d = new Date(p.clockIn);
+                // Simple bi-weekly grouping key or month/week
+                const startOfWeek = new Date(d);
+                startOfWeek.setDate(d.getDate() - d.getDay());
+                periods.add(startOfWeek.toISOString().split('T')[0]);
+            });
+
+            // Keep "All" and add dynamic options if available
+            let html = '<option value="all">All Records</option>';
+            Array.from(periods).sort().reverse().forEach(dateStr => {
+                const start = new Date(dateStr);
+                const end = new Date(start);
+                end.setDate(start.getDate() + 13);
+                html += `<option value="${dateStr}">${start.toLocaleDateString()} - ${end.toLocaleDateString()}</option>`;
+            });
+            select.innerHTML = html;
+        }
+
+        function filterPunches() {
+            const filterVal = document.getElementById('pay-period-select').value;
+            let filtered = allPunchesCache;
+
+            if (filterVal !== 'all') {
+                const startDate = new Date(filterVal);
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 14);
+
+                filtered = allPunchesCache.filter(p => {
+                    const punchDate = new Date(p.clockIn);
+                    return punchDate >= startDate && punchDate < endDate;
+                });
+            }
+
+            document.getElementById('punches-table-body').innerHTML = filtered.map(p => `
                 <tr class="hover:bg-slate-800/40 transition">
                     <td class="p-3 font-medium text-white">${p.name}</td>
                     <td class="p-3 text-slate-400">${p.qbClass || 'N/A'}</td>
