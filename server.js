@@ -35,10 +35,6 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
             satStart TEXT DEFAULT '08:00', satEnd TEXT DEFAULT '17:00',
             sunStart TEXT DEFAULT '08:00', sunEnd TEXT DEFAULT '17:00'
         )`, () => {
-            db.run(`ALTER TABLE employees ADD COLUMN showOnClock INTEGER DEFAULT 1`, () => {});
-            db.run(`ALTER TABLE employees ADD COLUMN role TEXT DEFAULT 'employee'`, () => {});
-            db.run(`ALTER TABLE employees ADD COLUMN payRate REAL DEFAULT 20.00`, () => {});
-
             db.get(`SELECT COUNT(*) as count FROM employees`, (err, row) => {
                 if (row.count === 0) {
                     const defaultUsers = [
@@ -61,12 +57,12 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
                     const stmt = db.prepare(`INSERT INTO employees (pin, name, role, needsPinSetup, showOnClock, payRate) VALUES (?, ?, ?, ?, ?, ?)`);
                     defaultUsers.forEach(u => stmt.run(u));
                     stmt.finalize();
-                    console.log('Seeded employees.');
+                    console.log('Seeded default employees.');
                 }
             });
         });
 
-        // Punches Table with strict error logging
+        // Punches Table
         db.run(`CREATE TABLE IF NOT EXISTS punches (
             id INTEGER PRIMARY KEY,
             name TEXT,
@@ -76,13 +72,11 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
             hoursDecimal REAL,
             override INTEGER,
             manager TEXT
-        )`, (err) => {
-            if (err) console.error('Error creating punches table:', err);
-        });
+        )`, () => {});
     }
 });
 
-// Employee API Endpoints
+// API: Employees
 app.get('/api/employees', (req, res) => {
     db.all(`SELECT * FROM employees`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -126,7 +120,7 @@ app.post('/api/employees/reset-pin', requireAuth, (req, res) => {
 app.post('/api/employees/update-pin', (req, res) => {
     const { id, pin } = req.body;
     db.run(`UPDATE employees SET pin = ?, needsPinSetup = 0 WHERE id = ?`, [pin, id], function(err) {
-        if (err) return res.status(400).json({ error: "PIN already taken or invalid." });
+        if (err) return res.status(400).json({ error: "PIN already taken." });
         res.json({ success: true });
     });
 });
@@ -148,13 +142,10 @@ app.post('/api/employees/delete', requireAuth, (req, res) => {
     });
 });
 
-// Time Punch API Endpoints
+// API: Punches
 app.get('/api/punches', (req, res) => {
     db.all(`SELECT * FROM punches ORDER BY clockIn DESC`, [], (err, rows) => {
-        if (err) {
-            console.error('Error fetching punches:', err.message);
-            return res.status(500).json({ error: err.message });
-        }
+        if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
 });
@@ -165,19 +156,13 @@ app.post('/api/punches/save', (req, res) => {
         if (row) {
             db.run(`UPDATE punches SET clockOut = ?, hoursDecimal = ? WHERE id = ?`,
                 [clockOut, hoursDecimal, id], function(err) {
-                    if (err) {
-                        console.error('Error updating punch:', err.message);
-                        return res.status(400).json({ error: err.message });
-                    }
+                    if (err) return res.status(400).json({ error: err.message });
                     res.json({ success: true });
                 });
         } else {
             db.run(`INSERT INTO punches (id, name, qbClass, clockIn, clockOut, hoursDecimal, override, manager) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                 [id, name, qbClass, clockIn, clockOut, hoursDecimal, override ? 1 : 0, manager], function(err) {
-                    if (err) {
-                        console.error('Error inserting punch:', err.message);
-                        return res.status(400).json({ error: err.message });
-                    }
+                    if (err) return res.status(400).json({ error: err.message });
                     res.json({ success: true });
                 });
         }
@@ -215,7 +200,7 @@ app.post('/login', (req, res) => {
     }
 });
 
-app.get(['/admin.html', '/Admin.html'], requireAuth, (req, res) => res.sendFile(path.join(__dirname, 'Admin.html')));
+app.get('/admin.html', requireAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.use(express.static(__dirname, { index: ['index.html'] }));
 
 const PORT = process.env.PORT || 3000;

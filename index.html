@@ -34,8 +34,8 @@
                 </div>
 
                 <div>
-                    <h2 id="terminal-title" class="text-xl font-bold text-slate-900 mt-2">Enter Your 4-Digit PIN</h2>
-                    <p id="terminal-subtitle" class="text-xs text-slate-500">Type on your keyboard or use the keypad below.</p>
+                    <h2 class="text-xl font-bold text-slate-900 mt-2">Enter Your 4-Digit PIN</h2>
+                    <p class="text-xs text-slate-500">Type on your keyboard or use the keypad below.</p>
                 </div>
             </div>
 
@@ -74,7 +74,7 @@
     <!-- First-Time PIN Setup Modal -->
     <div id="setup-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-white border border-slate-200 rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4 text-center">
-            <h3 id="setup-modal-title" class="text-base font-bold text-slate-900">Set Your Personal PIN</h3>
+            <h3 class="text-base font-bold text-slate-900">Set Your Personal PIN</h3>
             <p class="text-xs text-slate-500">This is your first time logging in. Please choose a secure 4-digit PIN:</p>
             <input type="password" id="new-pin-input" maxlength="4" placeholder="----" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-center text-2xl font-mono text-slate-900 tracking-widest focus:outline-none">
             <button onclick="saveNewPin()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-xs text-white transition">Save & Continue</button>
@@ -93,19 +93,15 @@
             renderTeamStatus();
         }
 
-        // Global Keyboard Listener
+        // Global keyboard listener
         window.addEventListener('keydown', (e) => {
             if (document.activeElement.tagName === 'SELECT') return;
 
-            // If setup modal is open, let Enter trigger saveNewPin
             if (document.getElementById('setup-modal').classList.contains('flex')) {
-                if (e.key === 'Enter') {
-                    saveNewPin();
-                }
+                if (e.key === 'Enter') saveNewPin();
                 return;
             }
 
-            // Normal PIN entry keypad handler
             if (e.key >= '0' && e.key <= '9') {
                 pressKey(e.key);
             } else if (e.key === 'Backspace') {
@@ -114,9 +110,7 @@
                     document.getElementById('pin-display').value = currentPin;
                 }
             } else if (e.key === 'Enter') {
-                if (currentPin.length === 4) {
-                    submitPin();
-                }
+                if (currentPin.length === 4) submitPin();
             }
         });
 
@@ -124,9 +118,7 @@
             if (currentPin.length < 4) {
                 currentPin += num;
                 document.getElementById('pin-display').value = currentPin;
-                if (currentPin.length === 4) {
-                    submitPin();
-                }
+                if (currentPin.length === 4) submitPin();
             }
         }
 
@@ -145,7 +137,6 @@
                 return;
             }
 
-            // Check if first-time PIN setup is required
             if (emp.needsPinSetup === 1) {
                 setupEmployeeId = emp.id;
                 document.getElementById('setup-modal').classList.remove('hidden');
@@ -157,7 +148,6 @@
 
             const selectedLocation = document.getElementById('location-select').value;
             
-            // Fetch latest punches
             const res = await fetch('/api/punches');
             const punches = await res.json();
             const activePunch = punches.find(p => p.name === emp.name && !p.clockOut);
@@ -191,7 +181,7 @@
                 alert("PIN successfully set! You are now ready to clock in/out.");
                 await initTerminal();
             } else {
-                alert(data.error || "PIN already in use. Please choose another.");
+                alert(data.error || "PIN already in use.");
             }
         }
 
@@ -219,7 +209,7 @@
                 alert(`${emp.name} successfully clocked in at ${qbClass}!`);
                 renderTeamStatus();
             } else {
-                alert("Error recording clock-in. Please try again.");
+                alert("Error recording clock-in.");
             }
         }
 
@@ -249,7 +239,7 @@
                 alert(`${empName} successfully clocked out. Total hours: ${hoursDecimal}`);
                 renderTeamStatus();
             } else {
-                alert("Error recording clock-out. Please try again.");
+                alert("Error recording clock-out.");
             }
         }
 
