@@ -192,18 +192,20 @@
             function getMonday(d) {
                 const date = new Date(d);
                 const day = date.getDay();
+                // Fix offset to correctly snap to Monday
                 const diff = date.getDate() - day + (day === 0 ? -6 : 1);
                 return new Date(date.setDate(diff));
             }
 
-            const anchor = new Date('2026-10-11T00:00:00');
+            // Hard-anchored explicitly to start precisely on Monday, October 26, 2026
+            const anchor = new Date('2026-10-26T00:00:00');
             const today = new Date();
             let currentMonday = getMonday(today);
             
             const diffTime = currentMonday - anchor;
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
             const weekNumber = Math.floor(diffDays / 7);
-            if (weekNumber % 2 !== 0) {
+            if (Math.abs(weekNumber) % 2 !== 0) {
                 currentMonday.setDate(currentMonday.getDate() - 7);
             }
             const currentPeriodKey = currentMonday.toISOString().split('T')[0];
@@ -215,9 +217,9 @@
                 let monday = getMonday(punchDate);
                 
                 const dTime = monday - anchor;
-                const dDays = Math.floor(dTime / (1000 * 60 * 60 * 24));
+                const dDays = Math.round(dTime / (1000 * 60 * 60 * 24));
                 const wNum = Math.floor(dDays / 7);
-                if (wNum % 2 !== 0) {
+                if (Math.abs(wNum) % 2 !== 0) {
                     monday.setDate(monday.getDate() - 7);
                 }
                 periods.add(monday.toISOString().split('T')[0]);
