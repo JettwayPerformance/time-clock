@@ -23,16 +23,46 @@
     <!-- Main Content Area -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
 
-        <!-- Staff Management Section -->
-        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-            <div class="flex justify-between items-center">
+        <!-- Staff Management & Manual Punch Sections Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Staff Management Section -->
+            <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-4">
                 <div>
                     <h3 class="text-base font-bold text-white">Staff Directory</h3>
                     <p class="text-xs text-slate-400">Manage employee PINs, roles, pay rates, and terminal visibility.</p>
                 </div>
-                <button onclick="openStaffModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-semibold text-white transition shadow-lg shadow-indigo-600/20">Manage Staff</button>
-            </div>
-        </section>
+                <button onclick="openStaffModal()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-semibold text-white transition shadow-lg shadow-indigo-600/20">Manage Staff</button>
+            </section>
+
+            <!-- Manual Punch Section -->
+            <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                <div>
+                    <h3 class="text-base font-bold text-white">Manual Punch Entry</h3>
+                    <p class="text-xs text-slate-400">Add missed punches or off-system time records directly.</p>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="manual-emp" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
+                        <option value="">Select Employee</option>
+                    </select>
+                    <select id="manual-loc" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
+                        <option value="Bryant">Bryant</option>
+                        <option value="Cabot">Cabot</option>
+                        <option value="Maumelle">Maumelle</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] text-slate-400 block mb-1">Clock In</label>
+                        <input type="datetime-local" id="manual-in" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-1.5 text-xs text-white font-mono">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-400 block mb-1">Clock Out</label>
+                        <input type="datetime-local" id="manual-out" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-1.5 text-xs text-white font-mono">
+                    </div>
+                </div>
+                <button onclick="submitManualPunch()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-semibold text-white transition">Save Manual Punch</button>
+            </section>
+        </div>
 
         <!-- Time Punches Overview Section -->
         <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
@@ -138,6 +168,40 @@
         </div>
     </div>
 
+    <!-- Edit Punch Modal -->
+    <div id="edit-punch-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-sm text-white">Edit Time Punch</h3>
+                <button onclick="closeEditPunchModal()" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+            <input type="hidden" id="edit-punch-id">
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Employee</label>
+                    <input type="text" id="edit-punch-name" disabled class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-400">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Location</label>
+                    <select id="edit-punch-loc" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
+                        <option value="Bryant">Bryant</option>
+                        <option value="Cabot">Cabot</option>
+                        <option value="Maumelle">Maumelle</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Clock In Time</label>
+                    <input type="datetime-local" id="edit-punch-in" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white font-mono">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Clock Out Time</label>
+                    <input type="datetime-local" id="edit-punch-out" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white font-mono">
+                </div>
+            </div>
+            <button onclick="savePunchEdit()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-xs text-white transition">Save Changes</button>
+        </div>
+    </div>
+
     <!-- Schedule Settings Modal -->
     <div id="schedule-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
@@ -166,7 +230,7 @@
         async function fetchEmployees() {
             const res = await fetch('/api/employees');
             employeesCache = await res.json();
-            populateEmployeeFilter();
+            populateEmployeeFilters();
         }
 
         async function fetchPunches() {
@@ -176,14 +240,26 @@
             filterPunches();
         }
 
-        function populateEmployeeFilter() {
-            const select = document.getElementById('employee-filter');
-            if (!select) return;
-            let html = '<option value="all">All Employees</option>';
-            employeesCache.forEach(emp => {
-                html += `<option value="${emp.name}">${emp.name}</option>`;
-            });
-            select.innerHTML = html;
+        function populateEmployeeFilters() {
+            // Employee filter dropdown
+            const filterSelect = document.getElementById('employee-filter');
+            if (filterSelect) {
+                let html = '<option value="all">All Employees</option>';
+                employeesCache.forEach(emp => {
+                    html += `<option value="${emp.name}">${emp.name}</option>`;
+                });
+                filterSelect.innerHTML = html;
+            }
+
+            // Manual punch employee dropdown
+            const manualSelect = document.getElementById('manual-emp');
+            if (manualSelect) {
+                let manualHtml = '<option value="">Select Employee</option>';
+                employeesCache.forEach(emp => {
+                    manualHtml += `<option value="${emp.name}">${emp.name}</option>`;
+                });
+                manualSelect.innerHTML = manualHtml;
+            }
         }
 
         function populatePayPeriods(punches) {
@@ -191,7 +267,6 @@
             if (!select) return;
             const periods = new Set();
 
-            // Strict bi-weekly anchor starting Monday, October 26, 2026
             const anchor = new Date('2026-10-26T00:00:00');
 
             function getBiWeeklyMonday(d) {
@@ -238,14 +313,9 @@
         }
 
         function filterPunches() {
-            const periodSelect = document.getElementById('pay-period-select');
-            const empSelect = document.getElementById('employee-filter');
-            const locSelect = document.getElementById('location-filter');
-            
-            const periodVal = periodSelect ? periodSelect.value : 'all';
-            const empVal = empSelect ? empSelect.value : 'all';
-            const locVal = locSelect ? locSelect.value : 'all';
-
+            const periodVal = document.getElementById('pay-period-select').value;
+            const empVal = document.getElementById('employee-filter').value;
+            const locVal = document.getElementById('location-filter').value;
             let filtered = allPunchesCache;
 
             if (periodVal && periodVal !== 'all') {
@@ -284,12 +354,91 @@
                         <td class="p-3 text-slate-300 font-mono">${p.clockOut ? new Date(p.clockOut).toLocaleString() : '<span class="text-emerald-400 animate-pulse font-bold">Active</span>'}</td>
                         <td class="p-3 text-indigo-300 font-mono font-bold">${p.hoursDecimal ? p.hoursDecimal + ' hrs' : '-'}</td>
                         <td class="p-3 text-emerald-400 font-mono font-bold">$${totalPay} <span class="text-[10px] text-slate-500 font-normal">($${rate}/hr)</span></td>
-                        <td class="p-3 text-right">
+                        <td class="p-3 text-right space-x-1">
+                            <button onclick="openEditPunchModal(${p.id})" class="px-2 py-1 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 rounded text-[10px] font-semibold transition">Edit</button>
                             <button onclick="deletePunch(${p.id})" class="px-2 py-1 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 rounded text-[10px] font-semibold transition">Delete</button>
                         </td>
                     </tr>
                 `;
             }).join('');
+        }
+
+        // Manual Punch Function
+        async function submitManualPunch() {
+            const name = document.getElementById('manual-emp').value;
+            const qbClass = document.getElementById('manual-loc').value;
+            const clockIn = document.getElementById('manual-in').value;
+            const clockOut = document.getElementById('manual-out').value;
+
+            if (!name || !clockIn) {
+                alert("Please select an employee and provide at least a clock-in time.");
+                return;
+            }
+
+            const res = await fetch('/api/punches/manual', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, qbClass, clockIn, clockOut: clockOut || null })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('manual-in').value = '';
+                document.getElementById('manual-out').value = '';
+                fetchPunches();
+                alert("Manual punch added successfully!");
+            } else {
+                alert(data.error || "Failed to add manual punch.");
+            }
+        }
+
+        // Edit Punch Functions
+        function toDatetimeLocal(isoString) {
+            if (!isoString) return '';
+            const d = new Date(isoString);
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        function openEditPunchModal(id) {
+            const punch = allPunchesCache.find(p => p.id === id);
+            if (!punch) return;
+
+            document.getElementById('edit-punch-id').value = punch.id;
+            document.getElementById('edit-punch-name').value = punch.name;
+            document.getElementById('edit-punch-loc').value = punch.qbClass || 'Bryant';
+            document.getElementById('edit-punch-in').value = toDatetimeLocal(punch.clockIn);
+            document.getElementById('edit-punch-out').value = toDatetimeLocal(punch.clockOut);
+
+            const modal = document.getElementById('edit-punch-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeEditPunchModal() {
+            const modal = document.getElementById('edit-punch-modal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        async function savePunchEdit() {
+            const id = document.getElementById('edit-punch-id').value;
+            const qbClass = document.getElementById('edit-punch-loc').value;
+            const clockIn = document.getElementById('edit-punch-in').value;
+            const clockOut = document.getElementById('edit-punch-out').value;
+
+            const res = await fetch('/api/punches/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, clockIn, clockOut: clockOut || null, qbClass })
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeEditPunchModal();
+                fetchPunches();
+                alert("Punch updated successfully!");
+            } else {
+                alert(data.error || "Failed to update punch.");
+            }
         }
 
         async function openStaffModal() {

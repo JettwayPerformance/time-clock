@@ -65,7 +65,7 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
 
         // Punches Table
         db.run(`CREATE TABLE IF NOT EXISTS punches (
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             qbClass TEXT,
             clockIn TEXT,
@@ -161,13 +161,53 @@ app.post('/api/punches/save', (req, res) => {
                     res.json({ success: true });
                 });
         } else {
-            db.run(`INSERT INTO punches (id, name, qbClass, clockIn, clockOut, hoursDecimal, override, manager) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                [id, name, qbClass, clockIn, clockOut, hoursDecimal, override ? 1 : 0, manager], function(err) {
+            db.run(`INSERT INTO punches (name, qbClass, clockIn, clockOut, hoursDecimal, override, manager) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [name, qbClass, clockIn, clockOut, hoursDecimal, override ? 1 : 0, manager], function(err) {
                     if (err) return res.status(400).json({ error: err.message });
                     res.json({ success: true });
                 });
         }
     });
+});
+
+// Edit an existing time punch
+app.post('/api/punches/update', requireAuth, (req, res) => {
+    const { id, clockIn, clockOut, qbClass } = req.body;
+    
+    let hoursDecimal = null;
+    if (clockIn && clockOut) {
+        const diffMs = new Date(clockOut) - new Date(clockIn);
+        hoursDecimal = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+    }
+
+    db.run(
+        `UPDATE punches SET clockIn = ?, clockOut = ?, hoursDecimal = ?, qbClass = ? WHERE id = ?`,
+        [clockIn, clockOut, hoursDecimal, qbClass, id],
+        function(err) {
+            if (err) return res.status(500).json({ success: false, error: err.message });
+            res.json({ success: true });
+        }
+    );
+});
+
+// Add a manual punch from the admin side
+app.post('/api/punches/manual', requireAuth, (req, res) => {
+    const { name, qbClass, clockIn, clockOut } = req.body;
+    
+    let hoursDecimal = null;
+    if (clockIn && clockOut) {
+        const diffMs = new Date(clockOut) - new Date(clockIn);
+        hoursDecimal = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+    }
+
+    db.run(
+        `INSERT INTO punches (name, qbClass, clockIn, clockOut, hoursDecimal, override) VALUES (?, ?, ?, ?, ?, 1)`,
+        [name, qbClass, clockIn, clockOut || null, hoursDecimal],
+        function(err) {
+            if (err) return res.status(500).json({ success: false, error: err.message });
+            res.json({ success: true, id: this.lastID });
+        }
+    );
 });
 
 app.post('/api/punches/delete', requireAuth, (req, res) => {
