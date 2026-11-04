@@ -20,22 +20,20 @@
         </div>
     </header>
 
-    <!-- Main Admin Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-8">
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
 
-        <!-- Top Actions / Add Team Member Bar -->
-        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-900">Team Management</h2>
-                    <p class="text-xs text-slate-500">Add new team members, manage active status on the terminal, and configure pay rates.</p>
-                </div>
-                <button onclick="openAddModal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition shadow-sm">+ Add Team Member</button>
+        <!-- Top Actions -->
+        <div class="flex justify-between items-center bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <div>
+                <h2 class="text-lg font-bold text-slate-900">Team Management</h2>
+                <p class="text-xs text-slate-500">Manage team members, PINs, pay rates, and schedule windows.</p>
             </div>
-        </section>
+            <button onclick="openAddModal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition shadow-sm">+ Add Team Member</button>
+        </div>
 
-        <!-- Team Members Grid / Table -->
-        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+        <!-- Team Roster Table -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
             <h3 class="text-base font-bold text-slate-900">Active Team Roster</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs">
@@ -43,9 +41,9 @@
                         <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-semibold">
                             <th class="p-3">Name</th>
                             <th class="p-3">Role</th>
-                            <th class="p-3">PIN / Setup</th>
+                            <th class="p-3">PIN Status</th>
                             <th class="p-3">Hourly Rate</th>
-                            <th class="p-3">Terminal Status</th>
+                            <th class="p-3">Terminal Visibility</th>
                             <th class="p-3 text-right">Actions</th>
                         </tr>
                     </thead>
@@ -54,14 +52,14 @@
                     </tbody>
                 </table>
             </div>
-        </section>
+        </div>
 
-        <!-- Hours Log & Location Breakdown Section -->
-        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+        <!-- Hours Log & Location Breakdown -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h3 class="text-base font-bold text-slate-900">Time Card History & Hours</h3>
-                    <p class="text-xs text-slate-500">Review historical punches, hours, and override logs.</p>
+                    <h3 class="text-base font-bold text-slate-900">Time Card Log & Hours</h3>
+                    <p class="text-xs text-slate-500">View punches, calculated hours, and manager overrides.</p>
                 </div>
                 <div class="flex items-center space-x-3 w-full sm:w-auto">
                     <!-- Location Filter Dropdown -->
@@ -96,7 +94,7 @@
                     </tbody>
                 </table>
             </div>
-        </section>
+        </div>
 
     </main>
 
@@ -127,7 +125,7 @@
             </div>
             <div class="grid grid-cols-2 gap-2 pt-2">
                 <button onclick="closeAddModal()" class="py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold text-xs text-slate-700 transition">Cancel</button>
-                <button onclick="saveNewTeamMember()" class="py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-xs text-white transition">Save Member</button>
+                <button onclick="saveNewTeamMember()" class="py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-xs text-white transition">Save</button>
             </div>
         </div>
     </div>
@@ -136,7 +134,7 @@
     <div id="schedule-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 id="schedule-modal-title" class="text-base font-bold text-slate-900">Configure Schedule</h3>
-            <p class="text-xs text-slate-500">Set weekly scheduled shift windows for this team member.</p>
+            <p class="text-xs text-slate-500">Set weekly scheduled shift hours for this team member.</p>
             
             <div id="schedule-inputs" class="space-y-3">
                 <!-- Day rows injected here -->
@@ -149,7 +147,7 @@
         </div>
     </div>
 
-    <!-- Admin JavaScript Logic -->
+    <!-- Script Logic -->
     <script>
         let employees = [];
         let punches = [];
