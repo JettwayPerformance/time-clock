@@ -81,11 +81,26 @@
         </div>
     </div>
 
+    <!-- Manager Override PIN Modal -->
+    <div id="override-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4 text-center">
+            <h3 class="text-base font-bold text-slate-900">Manager Override Required</h3>
+            <p id="override-msg" class="text-xs text-slate-500">You are outside your scheduled shift window. Please have a manager enter their 4-digit PIN to authorize this clock-in:</p>
+            <input type="password" id="manager-pin-input" maxlength="4" placeholder="----" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-center text-2xl font-mono text-slate-900 tracking-widest focus:outline-none">
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="closeOverrideModal()" class="py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold text-xs text-slate-700 transition">Cancel</button>
+                <button onclick="verifyManagerOverride()" class="py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-xs text-white transition">Authorize</button>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript Logic -->
     <script>
         let currentPin = "";
         let users = [];
         let setupEmployeeId = null;
+        let pendingClockInEmp = null;
+        let pendingLocation = null;
 
         async function initTerminal() {
             const res = await fetch('/api/employees');
@@ -93,12 +108,15 @@
             renderTeamStatus();
         }
 
-        // Global keyboard listener
         window.addEventListener('keydown', (e) => {
             if (document.activeElement.tagName === 'SELECT') return;
 
             if (document.getElementById('setup-modal').classList.contains('flex')) {
                 if (e.key === 'Enter') saveNewPin();
+                return;
+            }
+            if (document.getElementById('override-modal').classList.contains('flex')) {
+                if (e.key === 'Enter') verifyManagerOverride();
                 return;
             }
 
@@ -146,8 +164,6 @@
                 return;
             }
 
-            const selectedLocation = document.getElementById('location-select').value;
-            
             const res = await fetch('/api/punches');
             const punches = await res.json();
             const activePunch = punches.find(p => p.name === emp.name && !p.clockOut);
@@ -156,9 +172,65 @@
                 if (confirm(`Welcome, ${emp.name}!\nWould you like to clock out?`)) {
                     await completeClockOut(activePunch, emp.name);
                 }
-            } else {
-                await executeClockIn(emp, selectedLocation);
+                return;
             }
+
+            // Schedule Validation Check
+            const now = new Date();
+            const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+            const dayKey = days[now.getDay()];
+            
+            const scheduledStart = emp[dayKey + 'Start'] || '08:00';
+            const scheduledEnd = emp[dayKey + 'End'] || '17:00';
+
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const [startHour, startMin] = scheduledStart.split(':').map(Number);
+            const [endHour, endMin] = scheduledEnd.split(':').map(Number);
+            
+            const startMinutes = startHour * 60 + startMin;
+            const endMinutes = endHour * 60 + endMin;
+            const allowedStartMinutes = startMinutes - 30; // 30 min early grace window
+
+            const selectedLocation = document.getElementById('location-select').value;
+
+            if (currentMinutes < allowedStartMinutes || currentMinutes > endMinutes) {
+                // Outside scheduled shift -> Prompt for Manager PIN override
+                pendingClockInEmp = emp;
+                pendingLocation = selectedLocation;
+                document.getElementById('override-msg').innerText = `${emp.name}, your shift today is ${scheduledStart} - ${scheduledEnd}. You are outside your window. Enter a manager PIN to override:`;
+                document.getElementById('manager-pin-input').value = "";
+                document.getElementById('override-modal').classList.remove('hidden');
+                document.getElementById('override-modal').classList.add('flex');
+                document.getElementById('manager-pin-input').focus();
+                return;
+            }
+
+            await executeClockIn(emp, selectedLocation, 0, null);
+        }
+
+        async function verifyManagerOverride() {
+            const mPin = document.getElementById('manager-pin-input').value.trim();
+            const managerObj = users.find(u => u.pin === mPin && u.role === 'manager');
+
+            if (!managerObj) {
+                alert("Invalid manager PIN. Override denied.");
+                return;
+            }
+
+            document.getElementById('override-modal').classList.remove('flex');
+            document.getElementById('override-modal').classList.add('hidden');
+
+            // Proceed with clock-in flagged with override and manager name
+            await executeClockIn(pendingClockInEmp, pendingLocation, 1, managerObj.name);
+            pendingClockInEmp = null;
+            pendingLocation = null;
+        }
+
+        function closeOverrideModal() {
+            document.getElementById('override-modal').classList.remove('flex');
+            document.getElementById('override-modal').classList.add('hidden');
+            pendingClockInEmp = null;
+            pendingLocation = null;
         }
 
         async function saveNewPin() {
@@ -185,7 +257,7 @@
             }
         }
 
-        async function executeClockIn(emp, qbClass) {
+        async function executeClockIn(emp, qbClass, override, managerName) {
             const now = new Date().toISOString();
             const payload = {
                 id: Date.now(),
@@ -194,8 +266,8 @@
                 clockIn: now,
                 clockOut: null,
                 hoursDecimal: 0,
-                override: 0,
-                manager: null
+                override: override,
+                manager: managerName
             };
 
             const res = await fetch('/api/punches/save', {
