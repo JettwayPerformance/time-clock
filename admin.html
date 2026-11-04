@@ -178,6 +178,7 @@
 
         function populateEmployeeFilter() {
             const select = document.getElementById('employee-filter');
+            if (!select) return;
             let html = '<option value="all">All Employees</option>';
             employeesCache.forEach(emp => {
                 html += `<option value="${emp.name}">${emp.name}</option>`;
@@ -187,11 +188,12 @@
 
         function populatePayPeriods(punches) {
             const select = document.getElementById('pay-period-select');
+            if (!select) return;
             const periods = new Set();
 
-            // Anchor date strictly locked to Monday, October 26, 2026
+            // Strict bi-weekly anchor starting Monday, October 26, 2026
             const anchor = new Date('2026-10-26T00:00:00');
-            
+
             function getBiWeeklyMonday(d) {
                 const date = new Date(d);
                 date.setHours(0, 0, 0, 0);
@@ -236,12 +238,17 @@
         }
 
         function filterPunches() {
-            const periodVal = document.getElementById('pay-period-select').value;
-            const empVal = document.getElementById('employee-filter').value;
-            const locVal = document.getElementById('location-filter').value;
+            const periodSelect = document.getElementById('pay-period-select');
+            const empSelect = document.getElementById('employee-filter');
+            const locSelect = document.getElementById('location-filter');
+            
+            const periodVal = periodSelect ? periodSelect.value : 'all';
+            const empVal = empSelect ? empSelect.value : 'all';
+            const locVal = locSelect ? locSelect.value : 'all';
+
             let filtered = allPunchesCache;
 
-            if (periodVal !== 'all') {
+            if (periodVal && periodVal !== 'all') {
                 const startDate = new Date(periodVal + 'T00:00:00');
                 const endDate = new Date(startDate);
                 endDate.setDate(startDate.getDate() + 14);
@@ -261,7 +268,10 @@
                 filtered = filtered.filter(p => p.qbClass === locVal);
             }
 
-            document.getElementById('punches-table-body').innerHTML = filtered.map(p => {
+            const tbody = document.getElementById('punches-table-body');
+            if (!tbody) return;
+
+            tbody.innerHTML = filtered.map(p => {
                 const empRecord = employeesCache.find(e => e.name === p.name);
                 const rate = empRecord ? (empRecord.payRate || 20.00) : 20.00;
                 const totalPay = p.hoursDecimal ? (p.hoursDecimal * rate).toFixed(2) : '0.00';
@@ -284,7 +294,10 @@
 
         async function openStaffModal() {
             await fetchEmployees();
-            document.getElementById('staff-table-body').innerHTML = employeesCache.map(emp => `
+            const staffTbody = document.getElementById('staff-table-body');
+            if (!staffTbody) return;
+
+            staffTbody.innerHTML = employeesCache.map(emp => `
                 <tr class="hover:bg-slate-800/40 transition">
                     <td class="p-3 font-medium text-white">${emp.name}</td>
                     <td class="p-3 text-indigo-400 uppercase font-mono text-[10px]">${emp.role || 'employee'}</td>
@@ -309,13 +322,20 @@
                     </td>
                 </tr>
             `).join('');
-            document.getElementById('staff-modal').classList.remove('hidden');
-            document.getElementById('staff-modal').classList.add('flex');
+            
+            const modal = document.getElementById('staff-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
         }
 
         function closeStaffModal() {
-            document.getElementById('staff-modal').classList.remove('flex');
-            document.getElementById('staff-modal').classList.add('hidden');
+            const modal = document.getElementById('staff-modal');
+            if (modal) {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }
         }
 
         async function addNewEmployee() {
@@ -353,7 +373,8 @@
         }
 
         async function updatePayRate(id) {
-            const payRate = parseFloat(document.getElementById(`rate-${id}`).value) || 20.00;
+            const input = document.getElementById(`rate-${id}`);
+            const payRate = input ? parseFloat(input.value) || 20.00 : 20.00;
             await fetch('/api/employees/rate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -411,13 +432,19 @@
                 </div>
             `).join('');
 
-            document.getElementById('schedule-modal').classList.remove('hidden');
-            document.getElementById('schedule-modal').classList.add('flex');
+            const modal = document.getElementById('schedule-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
         }
 
         function closeScheduleModal() {
-            document.getElementById('schedule-modal').classList.remove('flex');
-            document.getElementById('schedule-modal').classList.add('hidden');
+            const modal = document.getElementById('schedule-modal');
+            if (modal) {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }
         }
 
         async function saveSchedule() {
@@ -455,3 +482,12 @@
             if (!confirm("⚠️ WARNING: This will delete ALL recorded time punches. Are you sure?")) return;
             const res = await fetch('/api/punches/wipe', { method: 'POST' });
             if ((await res.json()).success) {
+                fetchPunches();
+                alert("All punches wiped successfully.");
+            }
+        }
+
+        initAdmin();
+    </script>
+</body>
+</html>
