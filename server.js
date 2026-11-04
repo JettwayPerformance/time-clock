@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 const app = express();
 
@@ -200,7 +201,12 @@ app.post('/login', (req, res) => {
     }
 });
 
-app.get('/admin.html', requireAuth, (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+// Admin Route (supports both lower and upper case files on Linux)
+app.get(['/admin.html', '/Admin.html'], requireAuth, (req, res) => {
+    const targetFile = fs.existsSync(path.join(__dirname, 'admin.html')) ? 'admin.html' : 'Admin.html';
+    res.sendFile(path.join(__dirname, targetFile));
+});
+
 app.use(express.static(__dirname, { index: ['index.html'] }));
 
 const PORT = process.env.PORT || 3000;
