@@ -79,9 +79,39 @@
 
     </main>
 
+    <!-- Large Decorated Status / Welcome Modal -->
+    <div id="status-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-3xl max-w-md w-full p-8 shadow-2xl space-y-6 text-center transform transition-all">
+            <div id="status-icon" class="text-5xl">🎵</div>
+            <div class="space-y-2">
+                <h3 id="status-title" class="text-2xl font-black text-slate-900 dark:text-white">Welcome!</h3>
+                <p id="status-subtitle" class="text-sm font-medium text-slate-500 dark:text-slate-400">Successfully clocked in</p>
+            </div>
+            <div id="status-details" class="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300">
+                Location: Bryant
+            </div>
+            <button onclick="closeStatusModal()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 rounded-2xl font-bold text-sm text-white transition shadow-lg shadow-indigo-500/25">Continue</button>
+        </div>
+    </div>
+
+    <!-- Clock-Out Confirmation Modal -->
+    <div id="clockout-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-3xl max-w-md w-full p-8 shadow-2xl space-y-6 text-center">
+            <div class="text-5xl">👋</div>
+            <div class="space-y-2">
+                <h3 id="clockout-title" class="text-2xl font-black text-slate-900 dark:text-white">Ready to head out?</h3>
+                <p id="clockout-subtitle" class="text-sm font-medium text-slate-500 dark:text-slate-400">You are currently clocked in.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeClockOutModal()" class="py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-2xl font-bold text-sm text-slate-700 dark:text-slate-300 transition">Cancel</button>
+                <button onclick="confirmClockOut()" class="py-3.5 bg-rose-600 hover:bg-rose-500 rounded-2xl font-bold text-sm text-white transition shadow-lg shadow-rose-500/25">Clock Out</button>
+            </div>
+        </div>
+    </div>
+
     <!-- First-Time PIN Setup Modal -->
-    <div id="setup-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4 text-center">
+    <div id="setup-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-xl space-y-4 text-center">
             <h3 class="text-base font-bold text-slate-900 dark:text-white">Set Your Personal PIN</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400">This is your first time logging in. Please choose a secure 4-digit PIN:</p>
             <input type="password" id="new-pin-input" maxlength="4" placeholder="----" class="w-full bg-slate-50 border border-slate-300 dark:bg-slate-800 dark:border-slate-700 rounded-xl p-3 text-center text-2xl font-mono text-slate-900 dark:text-white tracking-widest focus:outline-none">
@@ -90,10 +120,10 @@
     </div>
 
     <!-- Manager Override PIN Modal -->
-    <div id="override-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4 text-center">
+    <div id="override-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-xl space-y-4 text-center">
             <h3 class="text-base font-bold text-slate-900 dark:text-white">Manager Override Required</h3>
-            <p id="override-msg" class="text-xs text-slate-500 dark:text-slate-400">You are outside your scheduled shift window. Please have a manager enter their 4-digit PIN to authorize this clock-in:</p>
+            <p id="override-msg" class="text-xs text-slate-500 dark:text-slate-400">Please have a manager enter their 4-digit PIN to authorize this action:</p>
             <input type="password" id="manager-pin-input" maxlength="4" placeholder="----" class="w-full bg-slate-50 border border-slate-300 dark:bg-slate-800 dark:border-slate-700 rounded-xl p-3 text-center text-2xl font-mono text-slate-900 dark:text-white tracking-widest focus:outline-none">
             <div class="grid grid-cols-2 gap-2">
                 <button onclick="closeOverrideModal()" class="py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl font-semibold text-xs text-slate-700 dark:text-slate-300 transition">Cancel</button>
@@ -109,6 +139,8 @@
         let setupEmployeeId = null;
         let pendingClockInEmp = null;
         let pendingLocation = null;
+        let activePunchToOut = null;
+        let statusTimer = null;
 
         // Dark Mode Initialization & Toggle
         function toggleDarkMode() {
@@ -124,7 +156,6 @@
             }
         }
 
-        // Apply saved theme on page load
         if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
             document.getElementById('dark-mode-btn').innerText = '☀️';
@@ -145,6 +176,14 @@
             }
             if (document.getElementById('override-modal').classList.contains('flex')) {
                 if (e.key === 'Enter') verifyManagerOverride();
+                return;
+            }
+            if (document.getElementById('clockout-modal').classList.contains('flex')) {
+                if (e.key === 'Enter') confirmClockOut();
+                return;
+            }
+            if (document.getElementById('status-modal').classList.contains('flex')) {
+                if (e.key === 'Enter' || e.key === ' ') closeStatusModal();
                 return;
             }
 
@@ -179,7 +218,7 @@
 
             const emp = users.find(u => u.pin === pin);
             if (!emp) {
-                alert("Invalid PIN. Please try again.");
+                showStatusModal("Invalid PIN", "Please check your PIN and try again.", "❌", "bg-rose-500/10 text-rose-500 border-rose-500/20");
                 return;
             }
 
@@ -197,9 +236,25 @@
             const activePunch = punches.find(p => p.name === emp.name && !p.clockOut);
 
             if (activePunch) {
-                if (confirm(`Welcome, ${emp.name}!\nWould you like to clock out?`)) {
-                    await completeClockOut(activePunch, emp.name);
-                }
+                activePunchToOut = activePunch;
+                document.getElementById('clockout-title').innerText = `Goodbye, ${emp.name}!`;
+                document.getElementById('clockout-subtitle').innerText = `Clocking out from ${activePunch.qbClass}`;
+                document.getElementById('clockout-modal').classList.remove('hidden');
+                document.getElementById('clockout-modal').classList.add('flex');
+                return;
+            }
+
+            const selectedLocation = document.getElementById('location-select').value;
+
+            // Location Restriction Check (expects emp.locations to be comma-separated or JSON array if assigned, e.g., "Bryant,Cabot")
+            if (emp.locations && emp.locations.trim() !== "" && !emp.locations.includes(selectedLocation)) {
+                pendingClockInEmp = emp;
+                pendingLocation = selectedLocation;
+                document.getElementById('override-msg').innerText = `${emp.name} is not normally assigned to ${selectedLocation}. Enter manager PIN to authorize:`;
+                document.getElementById('manager-pin-input').value = "";
+                document.getElementById('override-modal').classList.remove('hidden');
+                document.getElementById('override-modal').classList.add('flex');
+                document.getElementById('manager-pin-input').focus();
                 return;
             }
 
@@ -217,15 +272,12 @@
             
             const startMinutes = startHour * 60 + startMin;
             const endMinutes = endHour * 60 + endMin;
-            const allowedStartMinutes = startMinutes - 30; // 30 min early grace window
-
-            const selectedLocation = document.getElementById('location-select').value;
+            const allowedStartMinutes = startMinutes - 30;
 
             if (currentMinutes < allowedStartMinutes || currentMinutes > endMinutes) {
-                // Outside scheduled shift -> Prompt for Manager PIN override
                 pendingClockInEmp = emp;
                 pendingLocation = selectedLocation;
-                document.getElementById('override-msg').innerText = `${emp.name}, your shift today is ${scheduledStart} - ${scheduledEnd}. You are outside your window. Enter a manager PIN to override:`;
+                document.getElementById('override-msg').innerText = `${emp.name}, your shift today is ${scheduledStart} - ${scheduledEnd}. Outside window. Enter manager PIN to override:`;
                 document.getElementById('manager-pin-input').value = "";
                 document.getElementById('override-modal').classList.remove('hidden');
                 document.getElementById('override-modal').classList.add('flex');
@@ -241,14 +293,13 @@
             const managerObj = users.find(u => u.pin === mPin && u.role === 'manager');
 
             if (!managerObj) {
-                alert("Invalid manager PIN. Override denied.");
+                showStatusModal("Override Denied", "Invalid manager PIN.", "🚫", "bg-rose-500/10 text-rose-500");
                 return;
             }
 
             document.getElementById('override-modal').classList.remove('flex');
             document.getElementById('override-modal').classList.add('hidden');
 
-            // Proceed with clock-in flagged with override and manager name
             await executeClockIn(pendingClockInEmp, pendingLocation, 1, managerObj.name);
             pendingClockInEmp = null;
             pendingLocation = null;
@@ -259,6 +310,43 @@
             document.getElementById('override-modal').classList.add('hidden');
             pendingClockInEmp = null;
             pendingLocation = null;
+        }
+
+        function closeClockOutModal() {
+            document.getElementById('clockout-modal').classList.remove('flex');
+            document.getElementById('clockout-modal').classList.add('hidden');
+            activePunchToOut = null;
+        }
+
+        async function confirmClockOut() {
+            if (!activePunchToOut) return;
+            const punch = activePunchToOut;
+            closeClockOutModal();
+            await completeClockOut(punch);
+        }
+
+        function showStatusModal(title, subtitle, icon = "🎵", details = "") {
+            document.getElementById('status-title').innerText = title;
+            document.getElementById('status-subtitle').innerText = subtitle;
+            document.getElementById('status-icon').innerText = icon;
+            document.getElementById('status-details').innerText = details;
+            document.getElementById('status-details').style.display = details ? 'block' : 'none';
+            
+            const modal = document.getElementById('status-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            if (statusTimer) clearTimeout(statusTimer);
+            statusTimer = setTimeout(() => {
+                closeStatusModal();
+            }, 3500);
+        }
+
+        function closeStatusModal() {
+            if (statusTimer) clearTimeout(statusTimer);
+            const modal = document.getElementById('status-modal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
         }
 
         async function saveNewPin() {
@@ -278,7 +366,7 @@
             if (data.success) {
                 document.getElementById('setup-modal').classList.remove('flex');
                 document.getElementById('setup-modal').classList.add('hidden');
-                alert("PIN successfully set! You are now ready to clock in/out.");
+                showStatusModal("PIN Set Successfully!", "You are now ready to clock in and out.", "✅");
                 await initTerminal();
             } else {
                 alert(data.error || "PIN already in use.");
@@ -306,14 +394,14 @@
             const data = await res.json();
 
             if (data.success) {
-                alert(`${emp.name} successfully clocked in at ${qbClass}!`);
+                showStatusModal(`Welcome, ${emp.name}!`, `Successfully clocked in at ${qbClass}`, "🟢", `Time: ${newtoLocaleTime(now)}`);
                 renderTeamStatus();
             } else {
                 alert("Error recording clock-in.");
             }
         }
 
-        async function completeClockOut(activePunch, empName) {
+        async function completeClockOut(activePunch) {
             const clockOutTime = new Date();
             const clockInTime = new Date(activePunch.clockIn);
             const diffMs = clockOutTime - clockInTime;
@@ -336,11 +424,15 @@
             const data = await res.json();
 
             if (data.success) {
-                alert(`${empName} successfully clocked out. Total hours: ${hoursDecimal}`);
+                showStatusModal(`Goodbye, ${activePunch.name}!`, `Clocked out successfully.`, "👋", `Total Shift Hours: ${hoursDecimal} hrs`);
                 renderTeamStatus();
             } else {
                 alert("Error recording clock-out.");
             }
+        }
+
+        function newtoLocaleTime(isoString) {
+            return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
         async function renderTeamStatus() {
