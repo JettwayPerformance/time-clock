@@ -229,7 +229,7 @@ app.post('/api/punches/manual', requireAuth, (req, res) => {
 
 app.post('/api/punches/delete', requireAuth, (req, res) => {
     const { id } = req.body;
-    db.run(`DELETE FROM punches WHERE id = ?`, [id], function(-err) {
+    db.run(`DELETE FROM punches WHERE id = ?`, [id], function(err) {
         if (err) return res.status(400).json({ error: err.message });
         res.json({ success: true });
     });
