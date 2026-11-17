@@ -19,7 +19,7 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
     } else {
         console.log('Connected to the SQLite database.');
         
-        // Employees Table
+        // Employees Table with locations column added
         db.run(`CREATE TABLE IF NOT EXISTS employees (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             pin TEXT UNIQUE,
@@ -28,6 +28,7 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
             needsPinSetup INTEGER DEFAULT 1,
             showOnClock INTEGER DEFAULT 1,
             payRate REAL DEFAULT 20.00,
+            locations TEXT DEFAULT 'Bryant,Cabot,Maumelle',
             monStart TEXT DEFAULT '08:00', monEnd TEXT DEFAULT '17:00',
             tueStart TEXT DEFAULT '08:00', tueEnd TEXT DEFAULT '17:00',
             wedStart TEXT DEFAULT '08:00', wedEnd TEXT DEFAULT '17:00',
@@ -36,26 +37,36 @@ const db = new sqlite3.Database(path.join(__dirname, 'timeclock.db'), (err) => {
             satStart TEXT DEFAULT '08:00', satEnd TEXT DEFAULT '17:00',
             sunStart TEXT DEFAULT '08:00', sunEnd TEXT DEFAULT '17:00'
         )`, () => {
+            // Check if column exists for existing databases
+            db.all(`PRAGMA table_info(employees)`, (err, columns) => {
+                const hasLocations = columns.some(c => c.name === 'locations');
+                if (!hasLocations) {
+                    db.run(`ALTER TABLE employees ADD COLUMN locations TEXT DEFAULT 'Bryant,Cabot,Maumelle'`, () => {
+                        console.log('Added locations column to existing employees table.');
+                    });
+                }
+            });
+
             db.get(`SELECT COUNT(*) as count FROM employees`, (err, row) => {
                 if (row.count === 0) {
                     const defaultUsers = [
-                        ["1111", "Amber Thompson", "employee", 1, 1, 20.00],
-                        ["2222", "Brandon Hall", "employee", 1, 1, 20.00],
-                        ["3333", "Dylan Johnsey", "employee", 1, 1, 20.00],
-                        ["4444", "Ellie Dorey", "employee", 1, 1, 20.00],
-                        ["5555", "Hope Neel", "employee", 1, 1, 20.00],
-                        ["6666", "Jack Anderson", "employee", 1, 1, 20.00],
-                        ["7777", "Jack Campbell", "employee", 1, 1, 20.00],
-                        ["8888", "Jake Peterson", "employee", 1, 1, 20.00],
-                        ["3131", "Madyson Mazzola", "employee", 1, 1, 20.00],
-                        ["0000", "Michael Hickman", "employee", 1, 1, 20.00],
-                        ["1234", "Paige Johnsey", "employee", 1, 1, 20.00],
-                        ["2345", "William Robison", "employee", 1, 1, 20.00],
-                        ["3456", "Zach Jeffery", "employee", 1, 1, 20.00],
-                        ["4567", "Zach Smith", "employee", 1, 1, 20.00],
-                        ["9999", "Brandon Hall", "manager", 0, 1, 30.00]
+                        ["1111", "Amber Thompson", "employee", 1, 1, 20.00, "Bryant,Cabot,Maumelle"],
+                        ["2222", "Brandon Hall", "employee", 1, 1, 20.00, "Bryant,Cabot,Maumelle"],
+                        ["3333", "Dylan Johnsey", "employee", 1, 1, 20.00, "Bryant,Cabot,Maumelle"],
+                        ["4444", "Ellie Dorey", "employee", 1, 1, 20.00, "Bryant,Cabot,Maumelle"],
+                        ["5555", "Hope Neel", "employee", 1, 1, 20.00, "Bryant,Cabot,Maumelle"],
+                        ["6666", "Jack Anderson", "employee", 1, 1, 20.00, "Bryant,Cabot,Maumelle"],
+                        ["7777", "Jack Campbell", "employee", 1, 1, 20.00, "Bryant,Cabot,Maumelle"],
+                        ["8888", "Jake Peterson", "employee", 1, 1, 20.00, "Bryant,Cabot,Maumelle"],
+                        ["3131", "Madyson Mazzola", "employee", 1, 1, 20.00, "Bryant,Cabot,Maumelle"],
+                        ["0000", "Michael Hickman", "employee", 1, 1, 20.00, "Bryant,Cabot,Maumelle"],
+                        ["1234", "Paige Johnsey", "employee", 1, 1, 20.00, "Bryant,Cabot,Maumelle"],
+                        ["2345", "William Robison", "employee", 1, 1, 20.00, "Bryant,Cabot,Maumelle"],
+                        ["3456", "Zach Jeffery", "employee", 1, 1, 20.00, "Bryant,Cabot,Maumelle"],
+                        ["4567", "Zach Smith", "employee", 1, 1, 20.00, "Bryant,Cabot,Maumelle"],
+                        ["9999", "Brandon Hall", "manager", 0, 1, 30.00, "Bryant,Cabot,Maumelle"]
                     ];
-                    const stmt = db.prepare(`INSERT INTO employees (pin, name, role, needsPinSetup, showOnClock, payRate) VALUES (?, ?, ?, ?, ?, ?)`);
+                    const stmt = db.prepare(`INSERT INTO employees (pin, name, role, needsPinSetup, showOnClock, payRate, locations) VALUES (?, ?, ?, ?, ?, ?, ?)`);
                     defaultUsers.forEach(u => stmt.run(u));
                     stmt.finalize();
                     console.log('Seeded default employees.');
@@ -86,9 +97,9 @@ app.get('/api/employees', (req, res) => {
 });
 
 app.post('/api/employees/add', requireAuth, (req, res) => {
-    const { name, pin, role, payRate, showOnClock } = req.body;
-    db.run(`INSERT INTO employees (pin, name, role, needsPinSetup, showOnClock, payRate) VALUES (?, ?, ?, 1, ?, ?)`, 
-    [pin, name, role || 'employee', showOnClock !== undefined ? showOnClock : 1, payRate || 20.00], function(err) {
+    const { name, pin, role, payRate, locations, showOnClock } = req.body;
+    db.run(`INSERT INTO employees (pin, name, role, needsPinSetup, showOnClock, payRate, locations) VALUES (?, ?, ?, 1, ?, ?, ?)`, 
+    [pin, name, role || 'employee', showOnClock !== undefined ? showOnClock : 1, payRate || 20.00, locations || 'Bryant,Cabot,Maumelle'], function(err) {
         if (err) return res.status(400).json({ error: "PIN already in use." });
         res.json({ success: true, id: this.lastID });
     });
@@ -97,6 +108,14 @@ app.post('/api/employees/add', requireAuth, (req, res) => {
 app.post('/api/employees/toggle-visibility', requireAuth, (req, res) => {
     const { id, showOnClock } = req.body;
     db.run(`UPDATE employees SET showOnClock = ? WHERE id = ?`, [showOnClock, id], function(err) {
+        if (err) return res.status(400).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+app.post('/api/employees/locations', requireAuth, (req, res) => {
+    const { id, locations } = req.body;
+    db.run(`UPDATE employees SET locations = ? WHERE id = ?`, [locations, id], function(err) {
         if (err) return res.status(400).json({ error: err.message });
         res.json({ success: true });
     });
@@ -170,7 +189,6 @@ app.post('/api/punches/save', (req, res) => {
     });
 });
 
-// Edit an existing time punch
 app.post('/api/punches/update', requireAuth, (req, res) => {
     const { id, clockIn, clockOut, qbClass } = req.body;
     
@@ -190,7 +208,6 @@ app.post('/api/punches/update', requireAuth, (req, res) => {
     );
 });
 
-// Add a manual punch from the admin side
 app.post('/api/punches/manual', requireAuth, (req, res) => {
     const { name, qbClass, clockIn, clockOut } = req.body;
     
@@ -212,7 +229,7 @@ app.post('/api/punches/manual', requireAuth, (req, res) => {
 
 app.post('/api/punches/delete', requireAuth, (req, res) => {
     const { id } = req.body;
-    db.run(`DELETE FROM punches WHERE id = ?`, [id], function(err) {
+    db.run(`DELETE FROM punches WHERE id = ?`, [id], function(-err) {
         if (err) return res.status(400).json({ error: err.message });
         res.json({ success: true });
     });
@@ -241,7 +258,6 @@ app.post('/login', (req, res) => {
     }
 });
 
-// Admin Route (supports both lower and upper case files on Linux)
 app.get(['/admin.html', '/Admin.html'], requireAuth, (req, res) => {
     const targetFile = fs.existsSync(path.join(__dirname, 'admin.html')) ? 'admin.html' : 'Admin.html';
     res.sendFile(path.join(__dirname, targetFile));
